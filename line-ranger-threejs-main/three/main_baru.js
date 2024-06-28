@@ -53,8 +53,8 @@ loader.load('resources/dermaga.gltf', function (gltf) {
     function setShadowProperties(obj) {
         obj.traverse(child => {
             if (child.isMesh) {
-                // child.castShadow = true;
-                // child.receiveShadow = true;
+                child.castShadow = true;
+                child.receiveShadow = true;
             }
         });
     }
@@ -72,8 +72,8 @@ loader.load('resources/envreborn rumah.gltf', function (gltf) {
   function setShadowProperties(obj) {
       obj.traverse(child => {
           if (child.isMesh) {
-              // child.castShadow = true;
-              // child.receiveShadow = true;
+              child.castShadow = true;
+              child.receiveShadow = true;
           }
       });
   }
@@ -143,8 +143,8 @@ adventurerLoader.load("/Witch.glb", (adventurer) => {
   adventurerModel.position.set(5, 3.5, 0);
   adventurerModel.traverse((child) => {
     if (child.isMesh) {
-    //   child.castShadow = true;
-    //   child.receiveShadow = true;
+      child.castShadow = true;
+      child.receiveShadow = true;
     }
   });
 
@@ -272,7 +272,7 @@ function createLight(position) {
 
 // Posisi dari semua lampu
 const lightPositions = [
-    [282.9, 45, -200.7],
+    [0, 0, 0],
     [272.9, 45, -325.7],
     [272.9, 45, -105.7],
     [272.9, 45, 40.7],
