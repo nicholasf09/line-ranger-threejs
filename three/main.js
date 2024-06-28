@@ -1,21 +1,15 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
-import { FBXLoader } from 'three/examples/jsm/Addons.js';
-import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
-import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/Addons.js';
 import { Water } from 'three/addons/objects/Water.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js'
 import { Sky } from 'three/addons/objects/Sky.js';
-import { MeshBasicNodeMaterial, vec4, color, positionLocal, mix } from 'three/nodes';
 
 const renderer = new THREE.WebGLRenderer();
-// renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap; 
 document.body.appendChild(renderer.domElement);
-
-const SHADOW_MAP_WIDTH = 2048, SHADOW_MAP_HEIGHT = 1024;
 
 //setup Scene and Camera
 const scene = new THREE.Scene();
@@ -32,23 +26,23 @@ controls.target.set(0,5,0)
 controls.update()
 
 //LIGHT
-const fillLight1 = new THREE.HemisphereLight( 0x8dc1de, 0x00668d, 1.5 );
-fillLight1.position.set( 2, 1, 1 );
+// const fillLight1 = new THREE.HemisphereLight( 0x8dc1de, 0x00668d, 1.5 );
+// fillLight1.position.set( 2, 1, 1 );
 // scene.add( fillLight1 );
 
-const directionalLight = new THREE.DirectionalLight( 0xffffff, 2.5 );
-directionalLight.position.set( - 5, 25, - 1 );
-directionalLight.castShadow = true;
-directionalLight.shadow.camera.near = 0.01;
-directionalLight.shadow.camera.far = 500;
-directionalLight.shadow.camera.right = 30;
-directionalLight.shadow.camera.left = - 30;
-directionalLight.shadow.camera.top	= 30;
-directionalLight.shadow.camera.bottom = - 30;
-directionalLight.shadow.mapSize.width = 2048;
-directionalLight.shadow.mapSize.height = 2048;
-directionalLight.shadow.radius = 4;
-directionalLight.shadow.bias = - 0.0001;
+// const directionalLight = new THREE.DirectionalLight( 0xffffff, 2.5 );
+// directionalLight.position.set( - 5, 25, - 1 );
+// directionalLight.castShadow = true;
+// directionalLight.shadow.camera.near = 0.01;
+// directionalLight.shadow.camera.far = 500;
+// directionalLight.shadow.camera.right = 30;
+// directionalLight.shadow.camera.left = - 30;
+// directionalLight.shadow.camera.top	= 30;
+// directionalLight.shadow.camera.bottom = - 30;
+// directionalLight.shadow.mapSize.width = 2048;
+// directionalLight.shadow.mapSize.height = 2048;
+// directionalLight.shadow.radius = 4;
+// directionalLight.shadow.bias = - 0.0001;
 // scene.add( directionalLight );
 
 
@@ -57,19 +51,14 @@ const objects = [];
 
 // Fungsi untuk membuat dan mengatur cahaya
 function createLight(position) {
-    const light = new THREE.PointLight(0xffffff, 4000);
+    const light = new THREE.PointLight(0xffffff, 2000);
     light.position.set(...position);
-    light.angle = Math.PI / 6;
-    light.penumbra = 1;
-    light.decay = 2;
-    light.distance = 0;
-    light.castShadow = true;
-    light.shadow.mapSize.width = 1024;
-    light.shadow.mapSize.height = 1024;
-    light.shadow.camera.near = 0.1;  
-    light.shadow.camera.far = 500;  
-    light.shadow.focus = 1;
-    light.shadow.bias = -0.005;
+    // light.castShadow = true;
+    // light.shadow.mapSize.width = 1024; // Increase shadow map resolution
+    // light.shadow.mapSize.height = 1024; // Increase shadow map resolution
+    // light.shadow.bias = -0.001; // Reduce shadow acne
+    // light.shadow.camera.near = 0.5; // Adjust near clipping plane of shadow camera
+    // light.shadow.camera.far = 500; // Adjust far clipping plane of shadow camera
     scene.add(light);
 }
 
@@ -133,132 +122,25 @@ new RGBELoader()
 	} );
 
 //GLTF LOADER
-// const loader = new GLTFLoader();
-// loader.load('resources/testgrafkom(19-05).gltf', function (gltf) {
-//     const object = gltf.scene;
-//     object.position.set(0, 5.5, 0);
+const loader = new GLTFLoader();
+loader.load('resources/testgrafkom(19-05).gltf', function (gltf) {
+    const object = gltf.scene;
+    object.position.set(0, 5.5, 0);
 
-//     function setShadowProperties(obj) {
-//         obj.traverse(child => {
-//             if (child.isMesh) {
-//                 child.castShadow = true;
-//                 child.receiveShadow = true;
-//             }
-//         });
-//     }
+    // function setShadowProperties(obj) {
+    //     obj.traverse(child => {
+    //         if (child.isMesh) {
+    //             // child.castShadow = true;
+    //             // child.receiveShadow = true;
+    //         }
+    //     });
+    // }
 
-//     // Aktifkan bayangan pada objek yang dimuat
-//     setShadowProperties(object);
+    // Aktifkan bayangan pada objek yang dimuat
+    // setShadowProperties(object);
 
-//     scene.add(object);
-// });
-
-//LOAD KARAKTER
-// Load witch character with animation
-const witchLoader = new GLTFLoader();
-let mixer, idleAction, walkAction, currentAction;
-let witch;
-let witchPosition = new THREE.Vector3();
-let witchMoving = true; 
-
-witchLoader.load('witch.glb', function (gltf) {
-    witch = gltf.scene;
-    witch.scale.set(20, 20, 20);
-    witch.position.set(0, 0, 0);
-    scene.add(witch);
-    witchPosition.copy(witch.position);
-
-    mixer = new THREE.AnimationMixer(witch);
-    idleAction = mixer.clipAction(gltf.animations[4]); // Assuming the first animation is idle
-    walkAction = mixer.clipAction(gltf.animations[22]); // Assuming the second animation is walk
-    currentAction = idleAction;
-    idleAction.play();
+    scene.add(object);
 });
-
-// Handle keyboard input
-const keys = {
-    w: false,
-    a: false,
-    s: false,
-    d: false
-};
-
-document.addEventListener('keydown', (event) => {
-    keys[event.key] = true;
-    updateAnimation();
-});
-
-let ghostMode = false;
-
-//GHOST MODE
-document.addEventListener('keydown', (event) => {
-    if (event.code === 'Space') {
-        ghostMode = !ghostMode;
-        if (ghostMode) {
-            controls.enabled = true;
-            witchMoving = false;
-        } else {
-            controls.enabled = false;
-            witchMoving = true;
-        }
-    }
-});
-
-document.addEventListener('keyup', (event) => {
-    keys[event.key] = false;
-    updateAnimation();
-});
-
-function updateAnimation() {
-    if (keys.w || keys.a || keys.s || keys.d) {
-        if (currentAction !== walkAction) {
-            currentAction.stop();
-            currentAction = walkAction;
-            walkAction.play();
-        }
-    } else {
-        if (currentAction !== idleAction) {
-            currentAction.stop();
-            currentAction = idleAction;
-            idleAction.play();
-        }
-    }
-}
-
-function moveCharacter() {
-    if (!witch || ghostMode || !witchMoving) return;
-
-    const speed = 0.1;
-    let direction = new THREE.Vector3();
-    let rotationSpeed = 0.05;
-
-    if (keys.w) witch.position.z -= 0.4;
-    if (keys.s) witch.position.z += 0.4;
-    if (keys.a) witch.position.x -= 0.4;
-    if (keys.d) witch.position.x += 0.4;
-
-    if (direction.length() > 0) {
-        direction.normalize();
-        witch.position.add(direction.clone().multiplyScalar(speed));
-
-        let angle = Math.atan2(direction.x, direction.z);
-        let currentRotation = witch.rotation.y;
-
-        if (Math.abs(angle - currentRotation) > Math.PI) {
-            if (angle > currentRotation) {
-                currentRotation += 2 * Math.PI;
-            } else {
-                angle += 2 * Math.PI;
-            }
-        }
-
-        if (angle > currentRotation) {
-            witch.rotation.y += Math.min(rotationSpeed, angle - currentRotation);
-        } else {
-            witch.rotation.y -= Math.min(rotationSpeed, currentRotation - angle);
-        }
-    }
-}
 
 //Transparant
 // Geometry for bottle
@@ -331,10 +213,6 @@ function animate(time){
   var dt = time - time_prev;
   dt *= 0.1;
 
-  objects.forEach((obj)=>{
-    obj.rotation.z += dt * 0.01;
-  });
-
   //_____________________________WATER______________________________
   water.material.uniforms[ 'time' ].value += 1.0 / 60.0;
 
@@ -342,9 +220,6 @@ function animate(time){
   bottleGroup2.rotation.z += 0.01
   bottleGroup2.rotation.y += 0.01
   bottleGroup2.rotation.x += 0.01
-
-  moveCharacter();
-  if (mixer) mixer.update(dt * 0.01); // Update the mixer
 
   renderer.render(scene,camera);
 

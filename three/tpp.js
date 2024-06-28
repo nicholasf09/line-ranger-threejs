@@ -1,211 +1,244 @@
-class Player{
-	constructor(camera, controller, scene, speed){
-		this.camera = camera;
-		this.controller = controller;
-		this.scene = scene;
-		this.speed = speed;
-		this.state = "idle";
-		this.rotationVector = new THREE.Vector3(0,0,0);
-		this.animations = {};
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { Water } from 'three/examples/jsm/objects/Water.js';
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 
-		this.camera.setup(new THREE.Vector3(0,0,0), this.rotationVector);
+// Initialize renderer
+const renderer = new THREE.WebGLRenderer();
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
-		this.loadModel();	
+// Setup Scene and Camera
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x090633);
+scene.fog = new THREE.Fog(0x090633, 0, 4000);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 0, 100);
+camera.lookAt(0, 0, 0);
+
+// Orbit Controls
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 5, 0);
+controls.update();
+
+// Light setup
+function createLight(position) {
+    const light = new THREE.PointLight(0xffffff, 1);
+    light.position.set(...position);
+    light.castShadow = true;
+    scene.add(light);
 }
 
-loadModel(){
-	var loader = new FBXLoader();
-	loader.setPath('./resources/Knight/');
-	loader.load('Dwarf Idle.fbx', (fbx) => {
-		fbx.scale.setScalar(0.01);
-		fbx.traverse(c => {
-			c.castShadow = true;
-		});
-		this.mesh = fbx;
-		this.scene.add(this.mesh);
-		this.mesh.rotation.y += Math.PI/2;
+const lightPositions = [
+    [282.9, 45, -200.7],
+    [272.9, 45, -325.7],
+    [272.9, 45, -105.7],
+    [272.9, 45, 40.7],
+    [272.9, 45, 160],
+    [272.9, 45, 320],
+    [272.9, 45, 480],
+    [272.9, 45, 640],
+    [272.9, 45, 800],
+    [272.9, 45, 960],
+    [-160, 45, 10],
+    [-160, 45, 160],
+    [-120, 45, 160]
+];
 
-		this.mixer = new THREE.AnimationMixer(this.mesh);
+lightPositions.forEach(position => {
+    createLight(position);
+});
 
-		var onLoad = (animName, anim) => {
-			const clip = anim.animations[0];
-			const action = this.mixer.clipAction(clip);
-		
-			this.animations[animName] = {
-				clip: clip,
-				action: action,
-			};
-		};
+// Water setup
+const waterGeometry = new THREE.PlaneGeometry(10000, 10000);
+const water = new Water(
+    waterGeometry,
+    {
+        textureWidth: 512,
+        textureHeight: 512,
+        waterNormals: new THREE.TextureLoader().load('./waternormals.jpg', function (texture) {
+            texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+        }),
+        sunDirection: new THREE.Vector3(),
+        sunColor: 0xffffff,
+        waterColor: 0x001e0f,
+        distortionScale: 3.7,
+        fog: scene.fog !== undefined
+    }
+);
 
-		const loader = new FBXLoader();
-		loader.setPath('./resources/Knight/');
-		loader.load('Dwarf Idle.fbx', (fbx) => { onLoad('idle', fbx) });
-		loader.load('Sword And Shield Run.fbx', (fbx) => { onLoad('run', fbx) });
+water.rotation.x = -Math.PI / 2;
+scene.add(water);
 
-		
-	});
+new RGBELoader()
+    .setPath('')
+    .load('kloppenheim_02_puresky_8k.hdr', function (texture) {
+        texture.mapping = THREE.EquirectangularReflectionMapping;
+        scene.background = texture;
+        scene.environment = texture;
+    });
 
+// Load witch character with animation
+const witchLoader = new GLTFLoader();
+let mixer, idleAction, walkAction, currentAction;
+let witch;
+let clock = new THREE.Clock();
+
+// Load the witch character with animation
+witchLoader.load('witch.glb', function (gltf) {
+    witch = gltf.scene;
+    witch.scale.set(20, 20, 20);
+    witch.position.set(0, 0, 0);
+    witch.rotation.y = Math.PI;
+    scene.add(witch);
+
+    mixer = new THREE.AnimationMixer(witch);
+    idleAction = mixer.clipAction(gltf.animations[4]); // Assuming the 5th animation is idle
+    walkAction = mixer.clipAction(gltf.animations[22]); // Assuming the 23rd animation is walk
+    currentAction = idleAction;
+    idleAction.play();
+});
+
+// Handle keyboard input for movement
+let keys = {};
+let targetRotation = Math.PI;
+let moveDirection = null;
+let rotationSpeed = 0.1; // Adjust rotation speed
+let moveDistance = 0.4; // Adjust movement speed
+
+function handleKeyDown(event) {
+    keys[event.code] = true;
+    updateMovement();
 }
 
-	update(dt){
-		if(this.mesh && this.animations){
-		var direction = new THREE.Vector3(0,0,0);
+function handleKeyUp(event) {
+    keys[event.code] = false;
+    updateMovement();
+}
 
-		if(this.controller.keys['forward']){
-			direction.x = 1;
-			this.mesh.rotation.y = Math.PI/2;
-		}
-		if(this.controller.keys['backward']){
-			direction.x = -1;
-			this.mesh.rotation.y = -Math.PI/2;
-		}
-		if(this.controller.keys['left']){
-			direction.z = -1;
-			this.mesh.rotation.y = Math.PI;
-		}
-		if(this.controller.keys['right']){
-			direction.z = 1;
-			this.mesh.rotation.y = 0;
-		}
-		console.log(direction.length())
-		if(direction.length() == 0){
-			if(this.animations['idle']){
-				if(this.state != "idle"){
-					this.mixer.stopAllAction();
-					this.state = "idle";
-				} 
-				this.mixer.clipAction(this.animations['idle'].clip).play();
-			}
-		}else{
-			if(this.animations['run']){
-				if(this.state != "run"){
-					this.mixer.stopAllAction();
-					this.state = "run";
-				}
-				this.mixer.clipAction(this.animations['run'].clip).play();
-			}
-		}
+function updateMovement() {
+    if (!witch) return;
+    moveDirection = null;
 
-		if(this.controller.mouseDown)
-			{
-				var dtMouse = this.controller.deltaMousePos;
-				dtMouse.x = dtMouse.x / Math.PI;
-				dtMouse.y = dtMouse.y / Math.PI;
+    if (keys['ArrowUp']) {
+        targetRotation = Math.PI; // Face forward
+        moveDirection = 'forward';
+    }
+    if (keys['ArrowDown']) {
+        targetRotation = 0; // Face backward
+        moveDirection = 'backward';
+    }
+    if (keys['ArrowLeft']) {
+        targetRotation = -Math.PI / 2; // Face left
+        moveDirection = 'left';
+    }
+    if (keys['ArrowRight']) {
+        targetRotation = Math.PI / 2; // Face right
+        moveDirection = 'right';
+    }
 
-				this.rotationVector.y += dtMouse.x * dt * 10;
-				this.rotationVector.z += dtMouse.y * dt * 10;
-				this.mesh.rotation.y += dtMouse.x * dt * 10;
-			}
+    // Smooth rotation
+    witch.rotation.y = THREE.MathUtils.lerp(witch.rotation.y, targetRotation, rotationSpeed);
+}
 
-		var forwardVector = new THREE.Vector3(1,0,0);
-		var rightVector = new THREE.Vector3(0,0,1);
-		forwardVector.applyAxisAngle(new THREE.Vector3(0,1,0), this.rotationVector.y);
-		rightVector.applyAxisAngle(new THREE.Vector3(0,1,0), this.rotationVector.y);
+// Initialize variables
+let isGhostMode = false;
+let ghostCameraPosition = new THREE.Vector3(); // Initial position for ghost camera
 
-		this.mesh.position.add(forwardVector.multiplyScalar(dt*this.speed*direction.x));
-		this.mesh.position.add(rightVector.multiplyScalar(dt*this.speed*direction.z));
-		
-		this.camera.setup(this.mesh.position, this.rotationVector);
+// Function to handle switching between third-person view and ghost mode
+function toggleGhostMode() {
+	isGhostMode = !isGhostMode;
 
-		if(this.mixer){
-			this.mixer.update(dt);
-		}
-
-		}
+	// If entering ghost mode, save the current camera position as ghostCameraPosition
+	if (isGhostMode) {
+		ghostCameraPosition.copy(camera.position);
 	}
 }
 
-class PlayerController{
-
-    constructor(){
-        this.keys = {
-            "forward": false,
-            "backward": false,
-            "left": false,
-            "right": false
-        }
-        this.mousePos = new THREE.Vector2();
-        this.mouseDown = false;
-        this.deltaMousePos = new THREE.Vector2();
-        document.addEventListener('keydown', (e) => this.onKeyDown(e), false);
-        document.addEventListener('keyup', (e) => this.onKeyUp(e), false);
-        document.addEventListener('mousemove', (e) => this.onMouseMove(e), false);
-        document.addEventListener('mousedown', (e) => this.onMouseDown(e), false);
-        document.addEventListener('mouseup', (e) => this.onMouseUp(e), false);
-    }
-    onMouseDown(event){
-        this.mouseDown = true;
-    }
-    onMouseUp(event){
-        this.mouseDown = false;
-    }
-    onMouseMove(event){
-        var currentMousePos = new THREE.Vector2(
-            (event.clientX / window.innerWidth) * 2 - 1,
-            -(event.clientY / window.innerHeight) * 2 + 1
-        );
-        this.deltaMousePos.addVectors(currentMousePos, this.mousePos.multiplyScalar(-1)); 
-        this.mousePos.copy(currentMousePos);
-    }
-    onKeyDown(event){
-        switch(event.keyCode){
-            case "W".charCodeAt(0):
-            case "w".charCodeAt(0):
-                this.keys['forward'] = true;
-                break;
-            case "S".charCodeAt(0):
-            case "s".charCodeAt(0):
-                this.keys['backward'] = true;
-                break;
-            case "A".charCodeAt(0):
-            case "a".charCodeAt(0):
-                this.keys['left'] = true;
-                break;
-            case "D".charCodeAt(0):
-            case "d".charCodeAt(0):
-                this.keys['right'] = true;
-                break;
-        }
-    }
-    onKeyUp(event){
-        switch(event.keyCode){
-            case "W".charCodeAt(0):
-            case "w".charCodeAt(0):
-                this.keys['forward'] = false;
-                break;
-            case "S".charCodeAt(0):
-            case "s".charCodeAt(0):
-                this.keys['backward'] = false;
-                break;
-            case "A".charCodeAt(0):
-            case "a".charCodeAt(0):
-                this.keys['left'] = false;
-                break;
-            case "D".charCodeAt(0):
-            case "d".charCodeAt(0):
-                this.keys['right'] = false;
-                break;
-        }    
-    }
-
+// Function to update camera position and orientation based on current mode
+function updateCamera() {
+	if (isGhostMode) {
+		// Update ghost mode camera controls here (e.g., using keyboard and mouse)
+		// Example:
+		// Move camera with WASD keys
+		if (keys['KeyW']) camera.position.z -= moveDistance;
+		if (keys['KeyS']) camera.position.z += moveDistance;
+		if (keys['KeyA']) camera.position.x -= moveDistance;
+		if (keys['KeyD']) camera.position.x += moveDistance;
+		
+		// Rotate camera with mouse movement (use OrbitControls for easier implementation)
+		controls.update();
+	} else {
+		// Follow witch in third-person view
+		const offset = new THREE.Vector3(0, 50, -50).applyQuaternion(witch.quaternion);
+		camera.position.copy(witch.position).add(offset);
+		camera.lookAt(witch.position);
+	}
 }
 
-class ThirdPersonCamera{
-    constructor(camera, positionOffSet, targetOffSet){
-        this.camera = camera;
-        this.positionOffSet = positionOffSet;
-        this.targetOffSet = targetOffSet;
-    }
-    setup(target, angle){
-        var temp = new THREE.Vector3(0,0,0);
-        temp.copy(this.positionOffSet);
-        temp.applyAxisAngle(new THREE.Vector3(angle.x,1,0), angle.y);
-        temp.applyAxisAngle(new THREE.Vector3(angle.y,0,1), angle.z);
-        temp.addVectors(target, temp);
-        this.camera.position.copy(temp);
-        temp = new THREE.Vector3(0,0,0);
-        temp.addVectors(target, this.targetOffSet);
-        this.camera.lookAt(temp);
-    }
+// Update key event handlers to toggle ghost mode
+function handleKeyDownG(event) {
+	keys[event.code] = true;
+
+	// Toggle ghost mode with 'G' key
+	if (keys['KeyG']) toggleGhostMode();
 }
 
+function handleKeyUpG(event) {
+	keys[event.code] = false;
+}
+
+// Add event listeners for key events
+window.addEventListener('keydownG', handleKeyDownG);
+window.addEventListener('keyupG', handleKeyUpG);
+
+function animate(time) {
+    requestAnimationFrame(animate);
+    const delta = clock.getDelta();
+    if (mixer) mixer.update(delta);
+
+    // Move witch after rotation is close to the target
+    if (moveDirection) {
+        if (Math.abs(witch.rotation.y - targetRotation) < 0.1) {
+            if (moveDirection === 'forward') {
+                witch.position.z -= moveDistance;
+            } else if (moveDirection === 'backward') {
+                witch.position.z += moveDistance;
+            } else if (moveDirection === 'left') {
+                witch.position.x -= moveDistance;
+            } else if (moveDirection === 'right') {
+                witch.position.x += moveDistance;
+            }
+
+            if (currentAction !== walkAction) {
+                currentAction.stop();
+                currentAction = walkAction;
+                walkAction.play();
+            }
+        }
+    } else {
+        if (currentAction !== idleAction) {
+            currentAction.stop();
+            currentAction = idleAction;
+            idleAction.play();
+        }
+    }
+
+	// Update camera based on mode
+    updateCamera();
+
+	// Update camera position to follow the witch
+    const offset = new THREE.Vector3(0, 50, -50).applyQuaternion(witch.quaternion);
+    camera.position.copy(witch.position).add(offset);
+    camera.lookAt(witch.position);
+
+    renderer.render(scene, camera);
+}
+
+window.addEventListener('keydown', handleKeyDown);
+window.addEventListener('keyup', handleKeyUp);
+
+animate();
