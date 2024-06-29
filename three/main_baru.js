@@ -343,6 +343,45 @@ lightPositions.forEach(position => {
 
 var time_prev = 0;
 
+//______________________________BOTOL TRANSPARAN__________________________
+// Geometri dan Material untuk botol kaca
+const bottleGeometry = new THREE.CylinderGeometry(2, 2, 8, 32);
+const neckGeometry = new THREE.CylinderGeometry(1, 1, 2, 32);
+const capGeometry = new THREE.SphereGeometry(1, 32, 32);
+
+const glassMaterial = new THREE.MeshPhysicalMaterial({
+    color: 0xffffff,
+    metalness: 0,
+    roughness: 0,
+    transmission: 1.0,  // This makes the material transparent
+    opacity: 0.4,
+    reflectivity: 0.6,
+    transparent: true,
+    side: THREE.DoubleSide,
+});
+
+// Membuat botol
+const bottle = new THREE.Mesh(bottleGeometry, glassMaterial);
+bottle.scale.set(0.04,0.04,0.04);
+bottle.position.y = 5*0.04;
+
+const neck = new THREE.Mesh(neckGeometry, glassMaterial);
+neck.scale.set(0.04,0.04,0.04);
+neck.position.y = 9*0.04;
+
+const cap = new THREE.Mesh(capGeometry, glassMaterial);
+cap.scale.set(0.04,0.04,0.04);
+cap.position.y = 10.5*0.04;
+
+// Menambahkan botol ke scene
+// Menambahkan botol ke scene
+const bottleGroup = new THREE.Group();
+bottleGroup.add(bottle);
+bottleGroup.add(neck);
+bottleGroup.add(cap);
+
+scene.add(bottleGroup);
+
 // Resize
 window.addEventListener("resize", () => {
   sizes.height = window.innerHeight;
@@ -366,6 +405,11 @@ function animate(time) {
 
   var dt = time - time_prev;
   dt *= 0.1;
+
+  // Rotasi botol
+  bottleGroup.rotation.z += 0.01;
+  bottleGroup.rotation.y += 0.01;
+  bottleGroup.rotation.x += 0.01;
 
   //_____________________________WATER______________________________
   water.material.uniforms[ 'time' ].value += 1.0 / 60.0;
