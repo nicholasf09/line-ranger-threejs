@@ -11,8 +11,8 @@ export class Ghost {
     this.rotationSpeed = Math.PI / 2;
     this.currentRotation = new THREE.Euler(0, 0, 0);
     this.rotationVector = new THREE.Vector3();
-    this.camera.positionOffset =  new THREE.Vector3(0, 30, -20.5); 
-    this.camera.targetOffset = new THREE.Vector3(0, 30, 0);
+    this.camera.positionOffset =  new THREE.Vector3(0, 2*0.2, -5*0.2); 
+    this.camera.targetOffset = new THREE.Vector3(0, 2*0.2, 0);
     this.mouseLookSpeed = 1.5;
     this.cameraRotationY = 0;
     this.camera.setup(this.adventurerModel.position, this.currentRotation);
