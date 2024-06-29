@@ -14,7 +14,7 @@ export class Player {
     this.camera = camera;
     this.controller = controller;
     this.scene = scene;
-    this.speed = speed;
+    this.speed = 1;
     this.adventurerModel = adventurerModel;
     this.adventurerActions = adventurerActions;
     this.renderer = renderer;
