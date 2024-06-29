@@ -52,7 +52,7 @@ loader.load(
         const witch = gltf.scene;
         // Enable shadow for each mesh in the model
         witch.traverse(function (node) {
-            if (node.isMesh) {
+            if (node.isMesh) { //node = bagian tubuh
                 node.castShadow = true;
                 // node.receiveShadow = true;
             }
