@@ -14,7 +14,7 @@ export class Player {
     this.camera = camera;
     this.controller = controller;
     this.scene = scene;
-    this.speed = 1;
+    this.speed = 2;
     this.adventurerModel = adventurerModel;
     this.adventurerActions = adventurerActions;
     this.renderer = renderer;
@@ -201,7 +201,7 @@ export class Player {
       this.zoomLevel
     );
   }
-  
+
 }
 
 export class PlayerController {

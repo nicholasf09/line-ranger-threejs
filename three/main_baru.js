@@ -3,7 +3,6 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { Player, PlayerController, ThirdPersonCamera } from "./person.js";
 import { Ghost, GhostController, GhostCamera } from "./ghost.js";
-import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import { Water } from 'three/addons/objects/Water.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js'
 import { Sky } from 'three/addons/objects/Sky.js';
@@ -112,7 +111,6 @@ water.rotation.x = - Math.PI / 2;
 scene.add( water );
 
 //_____________________________________LOAD SKY_________________________________________
-// sky
 // new RGBELoader()
 // 	.setPath( '' )
 // 	.load( 'kloppenheim_02_puresky_8k.hdr', function ( texture ) {
@@ -123,18 +121,73 @@ scene.add( water );
 // 		scene.environment = texture;
 
 // 	} );
+const sky = new Sky();
+sky.scale.setScalar(450000);
+scene.add(sky);
 
-//Transparant
-// Geometry for bottle
-const bottleGeometry = new THREE.CylinderGeometry(1, 1, 5, 32);
-const neckGeometry = new THREE.CylinderGeometry(0.5, 0.5, 2, 32);
+const sun = new THREE.Vector3();
 
-// Transparent material
-const material = new THREE.MeshBasicMaterial({
-    color: 0xc6c6c6,
-    transparent: true,
-    opacity: 0.4
-});
+const skyUniforms = sky.material.uniforms;
+skyUniforms['turbidity'].value = 10;
+skyUniforms['rayleigh'].value = 2;
+skyUniforms['mieCoefficient'].value = 0.005;
+skyUniforms['mieDirectionalG'].value = 0.8;
+skyUniforms['sunColor'] = { value: new THREE.Color(0x4f0025) };
+
+const parameters = {
+  inclination: 0, // Position of the sun (0 = midnight, 0.5 = noon)
+  azimuth: 0.25, // Position of the sun around the sky
+};
+
+const sunColorNight = new THREE.Color(0x000000); // Black color for night
+const sunColorEarlyNight = new THREE.Color(0x222222); // Dark grey for early night
+const sunColorDawnDusk = new THREE.Color(0xffd1a4); // Orange color for dawn and dusk
+const sunColorDay = new THREE.Color(0x4f0025); // White color for day
+
+// Function to update the sky based on parameters
+function updateSky() {
+  const theta = Math.PI * (parameters.inclination - 0.5);
+  const phi = 2 * Math.PI * (parameters.azimuth - 0.5);
+
+  sun.x = Math.cos(phi);
+  sun.y = Math.sin(phi) * Math.sin(theta);
+  sun.z = Math.sin(phi) * Math.cos(theta);
+
+  sky.material.uniforms['sunPosition'].value.copy(sun);
+
+  // Interpolate sun color based on inclination
+  if (parameters.inclination < 0.125) {
+    // Night to early night
+    const t = parameters.inclination / 0.125;
+    sky.material.uniforms['sunColor'].value.lerpColors(sunColorNight, sunColorEarlyNight, t);
+  } else if (parameters.inclination < 0.25) {
+    // Early night to dawn
+    const t = (parameters.inclination - 0.125) / 0.125;
+    sky.material.uniforms['sunColor'].value.lerpColors(sunColorEarlyNight, sunColorDawnDusk, t);
+  } else if (parameters.inclination < 0.5) {
+    // Dawn to day
+    const t = (parameters.inclination - 0.25) / 0.25;
+    sky.material.uniforms['sunColor'].value.lerpColors(sunColorDawnDusk, sunColorDay, t);
+  } else if (parameters.inclination < 0.75) {
+    // Day to dusk
+    const t = (parameters.inclination - 0.5) / 0.25;
+    sky.material.uniforms['sunColor'].value.lerpColors(sunColorDay, sunColorDawnDusk, t);
+  } else if (parameters.inclination < 0.875) {
+    // Dusk to early night
+    const t = (parameters.inclination - 0.75) / 0.125;
+    sky.material.uniforms['sunColor'].value.lerpColors(sunColorDawnDusk, sunColorEarlyNight, t);
+  } else {
+    // Early night to night
+    const t = (parameters.inclination - 0.875) / 0.125;
+    sky.material.uniforms['sunColor'].value.lerpColors(sunColorEarlyNight, sunColorNight, t);
+  }
+}
+
+// Initial sky update
+updateSky();
+
+const sunLight = new THREE.DirectionalLight(0x4f0025, 1);
+scene.add(sunLight);
 
 //_______________________________________________LOAD WITCH_____________________________________
 const witchLoader = new GLTFLoader();
@@ -288,60 +341,6 @@ lightPositions.forEach(position => {
 // let stagSpeed = 0.1;
 // let rotateStag = false;
 
-//Botol 1
-// Mesh for bottle body
-var bottle = new THREE.Mesh(bottleGeometry, material);
-bottle.position.set(0, 0, 0);
-
-// Mesh for bottle neck
-var neck = new THREE.Mesh(neckGeometry, material);
-neck.position.set(0, 3.5, 0);
-
-// Create a group to hold the bottle and neck
-var bottleGroup = new THREE.Group();
-bottleGroup.add(bottle);
-bottleGroup.add(neck);
-
-// Position the entire bottle
-bottleGroup.position.set(-20, 5.5, 25);
-scene.add(bottleGroup);
-
-//Botol 2
-// Mesh for bottle body
-var bottle1 = new THREE.Mesh(bottleGeometry, material);
-bottle1.position.set(0, 0, 0);
-
-// Mesh for bottle neck
-var neck1 = new THREE.Mesh(neckGeometry, material);
-neck1.position.set(0, 3.5, 0);
-
-// Create a group to hold the bottle and neck
-var bottleGroup1 = new THREE.Group();
-bottleGroup1.add(bottle1);
-bottleGroup1.add(neck1);
-
-// Position the entire bottle
-bottleGroup1.position.set(-18, 5.5, 27);
-scene.add(bottleGroup1);
-
-//Botol 2
-// Mesh for bottle body
-var bottle2 = new THREE.Mesh(bottleGeometry, material);
-bottle2.position.set(0, 0, 0);
-
-// Mesh for bottle neck
-var neck2 = new THREE.Mesh(neckGeometry, material);
-neck2.position.set(0, 3.5, 0);
-
-// Create a group to hold the bottle and neck
-var bottleGroup2 = new THREE.Group();
-bottleGroup2.add(bottle2);
-bottleGroup2.add(neck2);
-
-// Position the entire bottle
-bottleGroup1.position.set(-22, 5.5, 23);
-scene.add(bottleGroup2);
-
 var time_prev = 0;
 
 // Resize
@@ -356,7 +355,6 @@ window.addEventListener("resize", () => {
 
 // Animate loop
 function animate(time) {
-  renderer.setClearColor(0x88939e);
   renderer.render(scene, camera);
 
   const delta = clock.getDelta()*0.2;
@@ -372,10 +370,16 @@ function animate(time) {
   //_____________________________WATER______________________________
   water.material.uniforms[ 'time' ].value += 1.0 / 60.0;
 
-  //bottle rotation
-  bottleGroup2.rotation.z += 0.01
-  bottleGroup2.rotation.y += 0.01
-  bottleGroup2.rotation.x += 0.01
+  // Update the sky
+  parameters.inclination += 0.0025; // Adjust the speed of the day/night cycle
+  if (parameters.inclination >= 1) {
+    parameters.inclination = 0; // Reset to start the cycle again
+  }
+  updateSky();
+
+  // Update sun light position and color
+  sunLight.position.copy(sun);
+  sunLight.color.copy(sky.material.uniforms['sunColor'].value);
 
   renderer.render(scene,camera);
 
