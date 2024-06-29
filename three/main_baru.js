@@ -44,11 +44,12 @@ const camera = new THREE.PerspectiveCamera(
   1000
 );
 
-//GLTF LOADER
+//______________________________________LOAD ENVIRONMENT_____________________________________
 const loader = new GLTFLoader();
 loader.load('resources/dermaga.gltf', function (gltf) {
     const object = gltf.scene;
     object.position.set(0, 0, 0);
+    object.scale.set(0.2,0.2,0.2);
 
     function setShadowProperties(obj) {
         obj.traverse(child => {
@@ -68,6 +69,7 @@ loader.load('resources/dermaga.gltf', function (gltf) {
 loader.load('resources/envreborn rumah.gltf', function (gltf) {
   const object = gltf.scene;
   object.position.set(0, 0, 0);
+  object.scale.set(0.2,0.2,0.2);
 
   function setShadowProperties(obj) {
       obj.traverse(child => {
@@ -84,6 +86,7 @@ loader.load('resources/envreborn rumah.gltf', function (gltf) {
   scene.add(object);
 });
 
+//___________________________________LOAD WATER________________________________________
 const waterGeometry = new THREE.PlaneGeometry( 10000, 10000 );
 
 var water = new Water(
@@ -108,6 +111,7 @@ water.rotation.x = - Math.PI / 2;
 
 scene.add( water );
 
+//_____________________________________LOAD SKY_________________________________________
 // sky
 // new RGBELoader()
 // 	.setPath( '' )
@@ -132,25 +136,26 @@ const material = new THREE.MeshBasicMaterial({
     opacity: 0.4
 });
 
-// Adventurer
-const adventurerLoader = new GLTFLoader();
-let adventurerModel, adventurerActions;
+//_______________________________________________LOAD WITCH_____________________________________
+const witchLoader = new GLTFLoader();
+let witchModel, witchActions;
 
-adventurerLoader.load("/Witch.glb", (adventurer) => {
-  adventurerModel = adventurer.scene;
-  scene.add(adventurerModel);
-  adventurerModel.scale.set(1, 1, 1);
-  adventurerModel.position.set(20, 2, 10);
-  adventurerModel.traverse((child) => {
+witchLoader.load("/Witch.glb", (witch) => {
+  witchModel = witch.scene;
+  scene.add(witchModel);
+  witchModel.scale.set(0.2, 0.2, 0.2);
+  witchModel.position.set(20*0.2, 2*0.2, 10*0.2);
+  witchModel.traverse((child) => {
     if (child.isMesh) {
       child.castShadow = true;
       child.receiveShadow = true;
     }
   });
 
-  const clips = adventurer.animations;
-  mixer2 = new THREE.AnimationMixer(adventurerModel);
-  adventurerActions = {
+  const clips = witch.animations;
+  mixer2 = new THREE.AnimationMixer(witchModel);
+  witchActions
+ = {
     idle: mixer2.clipAction(
       THREE.AnimationClip.findByName(clips, "CharacterArmature|Idle")
     ),
@@ -178,14 +183,15 @@ function createPlayer() {
   player = new Player(
     new ThirdPersonCamera(
       camera,
-      new THREE.Vector3(20, 2, 10),
-      new THREE.Vector3(20, 2, -20)
+      new THREE.Vector3(0, 2*0.2, -5*0.2),
+      new THREE.Vector3(0, 2*0.2, 0)
     ),
     new PlayerController(),
     scene,
     10,
-    adventurerModel,
-    adventurerActions,
+    witchModel,
+    witchActions
+  ,
     renderer,
     enviromentBoundingBox
   );
@@ -199,15 +205,14 @@ const ghostMaterial = new THREE.MeshBasicMaterial({
 });
 const ghostModel = new THREE.Mesh(ghostGeometry, ghostMaterial);
 
-
-ghostModel.position.set(0, 0, 0);
+ghostModel.position.set(20*0.2, 2*0.2, 10*0.2);
 
 function createGhostPlayer() {
   ghostPlayer = new Ghost(
     new GhostCamera(
       camera,
-      new THREE.Vector3(0, 30, -20.5),
-      new THREE.Vector3(0, 30, -0.5)
+      new THREE.Vector3(0, 2*0.2, -5*0.2),
+      new THREE.Vector3(0, 2*0.2, 0)
     ),
     new GhostController(),
     scene,
@@ -231,27 +236,6 @@ window.addEventListener("keydown", (event) => {
   }
 });
 
-// Light
-//LIGHT
-// const fillLight1 = new THREE.HemisphereLight( 0x8dc1de, 0x00668d, 1.5 );
-// fillLight1.position.set( 2, 1, 1 );
-// scene.add( fillLight1 );
-
-// const directionalLight = new THREE.DirectionalLight( 0xffffff, 2.5 );
-// directionalLight.position.set( - 5, 25, - 1 );
-// directionalLight.castShadow = true;
-// directionalLight.shadow.camera.near = 0.01;
-// directionalLight.shadow.camera.far = 500;
-// directionalLight.shadow.camera.right = 30;
-// directionalLight.shadow.camera.left = - 30;
-// directionalLight.shadow.camera.top	= 30;
-// directionalLight.shadow.camera.bottom = - 30;
-// directionalLight.shadow.mapSize.width = 2048;
-// directionalLight.shadow.mapSize.height = 2048;
-// directionalLight.shadow.radius = 4;
-// directionalLight.shadow.bias = - 0.0001;
-// scene.add( directionalLight );
-
 const ambientLight = new THREE.AmbientLight(0x404080, 0.5); // cool blue color, low intensity
 scene.add(ambientLight);
 //Geometry
@@ -259,7 +243,7 @@ const objects = [];
 
 // Fungsi untuk membuat dan mengatur cahaya
 function createLight(position) {
-    const light = new THREE.PointLight(0xffffff, 200, 200);
+    const light = new THREE.PointLight(0xffffff, 5, 20);
     light.position.set(...position);
     light.castShadow = true;
     // light.shadow.mapSize.width = 1024; // Increase shadow map resolution
@@ -269,8 +253,8 @@ function createLight(position) {
     // light.shadow.camera.far = 500; // Adjust far clipping plane of shadow camera
     scene.add(light);
 
-    const lightHelper = new THREE.PointLightHelper(light, 1, 0xffffff);
-    scene.add(lightHelper);
+    // const lightHelper = new THREE.PointLightHelper(light, 1, 0xffffff);
+    // scene.add(lightHelper);
 }
 
 // Posisi dari semua lampu
@@ -283,6 +267,12 @@ const lightPositions = [
     [17, 4, 3]
 ];
 
+for(var i = 0; i < lightPositions.length; i++){
+  for(var j = 0; j < 3; j++){
+    lightPositions[i][j] = lightPositions[i][j]*0.2
+  }
+}
+
 // Buat semua lampu berdasarkan posisi yang diberikan
 lightPositions.forEach(position => {
     createLight(position);
@@ -293,15 +283,6 @@ lightPositions.forEach(position => {
 // scene.fog = new THREE.Fog(0x88939e, 100, 250);
 // let stagSpeed = 0.1;
 // let rotateStag = false;
-
-// Resize
-window.addEventListener("resize", () => {
-  sizes.height = window.innerHeight;
-  sizes.width = window.innerWidth;
-  camera.aspect = sizes.width / sizes.height;
-  camera.updateProjectionMatrix();
-  renderer.setSize(sizes.width, sizes.height);
-});
 
 //Botol 1
 // Mesh for bottle body
@@ -359,13 +340,22 @@ scene.add(bottleGroup2);
 
 var time_prev = 0;
 
+// Resize
+window.addEventListener("resize", () => {
+  sizes.height = window.innerHeight;
+  sizes.width = window.innerWidth;
+  camera.aspect = sizes.width / sizes.height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(sizes.width, sizes.height);
+});
+
 
 // Animate loop
 function animate(time) {
   renderer.setClearColor(0x88939e);
   renderer.render(scene, camera);
 
-  const delta = clock.getDelta();
+  const delta = clock.getDelta()*0.2;
   if (mixer2) mixer2.update(delta);
   if (player) {
     // Check if player is defined before updating
