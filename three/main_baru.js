@@ -144,6 +144,9 @@ const sunColorEarlyNight = new THREE.Color(0x222222); // Dark grey for early nig
 const sunColorDawnDusk = new THREE.Color(0xffd1a4); // Orange color for dawn and dusk
 const sunColorDay = new THREE.Color(0x4f0025); // White color for day
 
+const ambientLight = new THREE.AmbientLight(0x4f0025, 0.5); // cool blue color, low intensity
+scene.add(ambientLight);
+
 // Function to update the sky based on parameters
 function updateSky() {
   const theta = Math.PI * (parameters.inclination - 0.5);
@@ -188,6 +191,7 @@ updateSky();
 
 const sunLight = new THREE.DirectionalLight(0x4f0025, 1);
 scene.add(sunLight);
+var tonight = true;
 
 //_______________________________________________LOAD WITCH_____________________________________
 const witchLoader = new GLTFLoader();
@@ -241,10 +245,9 @@ function createPlayer() {
     ),
     new PlayerController(),
     scene,
-    10,
+    0.75,
     witchModel,
-    witchActions
-  ,
+    witchActions,
     renderer,
     enviromentBoundingBox
   );
@@ -289,8 +292,6 @@ window.addEventListener("keydown", (event) => {
   }
 });
 
-const ambientLight = new THREE.AmbientLight(0x404080, 0.5); // cool blue color, low intensity
-scene.add(ambientLight);
 //Geometry
 const objects = [];
 
@@ -415,9 +416,17 @@ function animate(time) {
   water.material.uniforms[ 'time' ].value += 1.0 / 60.0;
 
   // Update the sky
-  parameters.inclination += 0.0025; // Adjust the speed of the day/night cycle
+  if(tonight){
+    parameters.inclination += 0.0025; // Adjust the speed of the day/night cycle
+  }
+  else{
+    parameters.inclination -= 0.0025; // Adjust the speed of the day/night cycle   
+  }
+  
   if (parameters.inclination >= 1) {
-    parameters.inclination = 0; // Reset to start the cycle again
+    tonight = false;
+  } else if (parameters.inclination <= 0){
+    tonight=true;
   }
   updateSky();
 
