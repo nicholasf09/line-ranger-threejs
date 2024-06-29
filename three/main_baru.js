@@ -75,10 +75,23 @@ loader.load('resources/envreborn rumah.gltf', function (gltf) {
           if (child.isMesh) {
               child.castShadow = true;
               child.receiveShadow = true;
+
+              // Buat bounding box untuk child
+              const boundingBox = new THREE.Box3().setFromObject(child);
+
+              // Buat bounding box global dengan mempertimbangkan transformasi global
+              const worldMatrix = child.matrixWorld;
+              boundingBox.applyMatrix4(worldMatrix);
+
+              // Tambahkan bounding box ke array dan sesuaikan dengan skala dan posisi objek
+              enviromentBoundingBox.push(boundingBox);
+
+              // Tambahkan bounding box helper untuk debugging
+              const boxHelper = new THREE.BoxHelper(child, 0x00ff00);
+              scene.add(boxHelper);
           }
       });
   }
-
   // Aktifkan bayangan pada objek yang dimuat
   setShadowProperties(object);
 
@@ -245,7 +258,7 @@ function createPlayer() {
     ),
     new PlayerController(),
     scene,
-    0.75,
+    0.5,
     witchModel,
     witchActions,
     renderer,
@@ -272,7 +285,7 @@ function createGhostPlayer() {
     ),
     new GhostController(),
     scene,
-    50,
+    1,
     ghostModel,
     renderer
   );
@@ -375,7 +388,6 @@ cap.scale.set(0.04,0.04,0.04);
 cap.position.y = 10.5*0.04;
 
 // Menambahkan botol ke scene
-// Menambahkan botol ke scene
 const bottleGroup = new THREE.Group();
 bottleGroup.add(bottle);
 bottleGroup.add(neck);
@@ -397,7 +409,7 @@ window.addEventListener("resize", () => {
 function animate(time) {
   renderer.render(scene, camera);
 
-  const delta = clock.getDelta()*0.2;
+  const delta = clock.getDelta();
   if (mixer2) mixer2.update(delta);
   if (player) {
     // Check if player is defined before updating
@@ -413,14 +425,14 @@ function animate(time) {
   bottleGroup.rotation.x += 0.01;
 
   //_____________________________WATER______________________________
-  water.material.uniforms[ 'time' ].value += 1.0 / 60.0;
+  water.material.uniforms[ 'time' ].value += 0.10 / 60.0;
 
   // Update the sky
   if(tonight){
-    parameters.inclination += 0.0025; // Adjust the speed of the day/night cycle
+    parameters.inclination += 0.00025; // Adjust the speed of the day/night cycle
   }
   else{
-    parameters.inclination -= 0.0025; // Adjust the speed of the day/night cycle   
+    parameters.inclination -= 0.00025; // Adjust the speed of the day/night cycle   
   }
   
   if (parameters.inclination >= 1) {

@@ -38,6 +38,7 @@ export class Player {
     this.activeAction = this.adventurerActions["idle"];
     this.activeAction.play();
   }
+  
   checkCollision() {
     const playerBoundingBox = new THREE.Box3().setFromObject(this.adventurerModel);
     for (const boundingBox of this.enviromentBoundingBox) {
