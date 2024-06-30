@@ -17,10 +17,10 @@ let player, ghostPlayer, mainPlayer;
 // Bounding box
 let stagBoundingBox = null;
 let walkBoundingBox = null;
-let adventurerBoundingBox = null;
+let witchBoundingBox = null;
 let enviromentBoundingBox = [];
 // Initialize bounding boxes for debugging visualization
-let stagBBoxHelper, walkBBoxHelper, adventurerBBoxHelper;
+let stagBBoxHelper, walkBBoxHelper, witchBoxHelper;
 
 // Sizes
 const sizes = {
@@ -77,11 +77,12 @@ loader.load('resources/envreborn rumah.gltf', function (gltf) {
               child.receiveShadow = true;
 
               // Buat bounding box untuk child
-              const boundingBox = new THREE.Box3().setFromObject(child);
+              const boundingBox = new THREE.Box3().setFromObject(object);
 
-              // Buat bounding box global dengan mempertimbangkan transformasi global
-              const worldMatrix = child.matrixWorld;
-              boundingBox.applyMatrix4(worldMatrix);
+              boundingBox.min.multiply(object.scale);
+              boundingBox.max.multiply(object.scale);
+              boundingBox.min.add(object.position);
+              boundingBox.max.add(object.position);
 
               // Tambahkan bounding box ke array dan sesuaikan dengan skala dan posisi objek
               enviromentBoundingBox.push(boundingBox);
@@ -153,11 +154,11 @@ const parameters = {
 };
 
 const sunColorNight = new THREE.Color(0x000000); // Black color for night
-const sunColorEarlyNight = new THREE.Color(0x222222); // Dark grey for early night
+const sunColorEarlyNight = new THREE.Color(0x4f0025); // Dark grey for early night
 const sunColorDawnDusk = new THREE.Color(0xffd1a4); // Orange color for dawn and dusk
-const sunColorDay = new THREE.Color(0x4f0025); // White color for day
+const sunColorDay = new THREE.Color(0x222222); // White color for day
 
-const ambientLight = new THREE.AmbientLight(0x4f0025, 0.5); // cool blue color, low intensity
+const ambientLight = new THREE.AmbientLight(0xadd8e6, 1); 
 scene.add(ambientLight);
 
 // Function to update the sky based on parameters
@@ -199,7 +200,7 @@ function updateSky() {
   }
 }
 
-// Initial sky update
+// // Initial sky update
 updateSky();
 
 const sunLight = new THREE.DirectionalLight(0x4f0025, 1);
@@ -215,6 +216,7 @@ witchLoader.load("/Witch.glb", (witch) => {
   scene.add(witchModel);
   witchModel.scale.set(0.2, 0.2, 0.2);
   witchModel.position.set(20*0.2, 2*0.2, 10*0.2);
+  witchModel.updateMatrixWorld(true);
   witchModel.traverse((child) => {
     if (child.isMesh) {
       child.castShadow = true;
@@ -222,10 +224,16 @@ witchLoader.load("/Witch.glb", (witch) => {
     }
   });
 
+  // Membuat bounding box
+  const witchBoundingBox = new THREE.Box3().setFromObject(witchModel);
+
+  // Menggunakan BoxHelper dengan witchModel, bukan witchBoundingBox
+  const witchBoxHelper = new THREE.BoxHelper(witchModel, 0x0000ff); // Biru untuk witch
+  scene.add(witchBoxHelper);
+
   const clips = witch.animations;
   mixer2 = new THREE.AnimationMixer(witchModel);
-  witchActions
- = {
+  witchActions = {
     idle: mixer2.clipAction(
       THREE.AnimationClip.findByName(clips, "CharacterArmature|Idle")
     ),
@@ -445,6 +453,17 @@ function animate(time) {
   // Update sun light position and color
   sunLight.position.copy(sun);
   sunLight.color.copy(sky.material.uniforms['sunColor'].value);
+
+  //update box witch
+  if (witchModel && witchBoundingBox) {
+    witchBoundingBox.setFromObject(witchModel);
+    scene.remove(witchBBoxHelper);
+    witchBoxHelper = new THREE.Box3Helper(
+      witchBoundingBox,
+      0x0000ff
+    );
+    scene.add(witchBoxHelper);
+  }
 
   renderer.render(scene,camera);
 
