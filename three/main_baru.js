@@ -11,7 +11,7 @@ import { Sky } from 'three/addons/objects/Sky.js';
 // Clock
 const clock = new THREE.Clock();
 // Mixers
-let farmerMixer, kingMixer, banditMixer, frogMixer, witchMixer;
+let farmerMixer, kingMixer, banditMixer, lionFishMixer, frogMixer, witchMixer;
 // Player
 let player, ghostPlayer, mainPlayer;
 // Bounding box
@@ -370,6 +370,44 @@ banditLoader.load("/Bandit.glb", (bandit) => {
   } 
 });
 
+//______________________________LOAD lionFish_____________________________
+const lionFishLoader = new GLTFLoader();
+let lionFishModel;
+
+lionFishLoader.load("/Lionfish.glb", (lionFish) => {
+  lionFishModel = lionFish.scene;
+  scene.add(lionFishModel);
+  lionFishModel.scale.set(0.02, 0.02, 0.02);
+  lionFishModel.position.set(-24*0.2, 2*0.2, 10*0.2);
+  lionFishModel.rotation.y = THREE.MathUtils.degToRad(60);
+  lionFishModel.traverse((child) => {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+
+      // Create bounding box helper
+      childBoundingBox = new THREE.Box3().setFromObject(child);
+      childBoundingBox.min.multiply(lionFishModel.scale);
+      childBoundingBox.max.multiply(lionFishModel.scale);
+      childBoundingBox.min.add(lionFishModel.position);
+      childBoundingBox.max.add(lionFishModel.position);
+      childBBoxHelper = new THREE.Box3Helper(childBoundingBox, 0xff0000);
+      enviromentBoundingBox.push(childBoundingBox)
+      scene.add(childBBoxHelper);
+    }
+  });
+
+  const clips = lionFish.animations;
+  lionFishMixer = new THREE.AnimationMixer(lionFishModel);
+  const wavingClip = THREE.AnimationClip.findByName(clips, "Fish_Armature|Out_Of_Water");
+
+  if (wavingClip) {
+    const wavingAction = lionFishMixer.clipAction(wavingClip);
+    wavingAction.setLoop(THREE.LoopRepeat);
+    wavingAction.play();
+  } 
+});
+
 //______________________________LOAD FROG_____________________________
 const frogLoader = new GLTFLoader();
 let frogModel;
@@ -572,6 +610,10 @@ function animate(time) {
 
   if (banditMixer) {
     banditMixer.update(delta);
+  }
+
+  if (lionFishMixer) {
+    lionFishMixer.update(delta);
   }
 
   if(frogMixer){
