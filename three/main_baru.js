@@ -65,38 +65,32 @@ loader.load('resources/dermaga.gltf', function (gltf) {
     scene.add(object);
 });
 
-loader.load('resources/envreborn rumah.gltf', function (gltf) {
-  const object = gltf.scene;
-  object.position.set(0, 0, 0);
-  object.scale.set(0.2,0.2,0.2);
 
-  function setShadowProperties(obj) {
-      obj.traverse(child => {
-          if (child.isMesh) {
-              child.castShadow = true;
-              child.receiveShadow = true;
+let buildingModel, childBoundingBox, childBBoxHelper;
+const buildingLoader = new GLTFLoader();
+buildingLoader.load("resources/envreborn rumah.gltf", function (building) {
+  buildingModel = building.scene;
+  buildingModel.scale.set(0.2, 0.2, 0.2);
+  buildingModel.position.set(0, 0, 0);
 
-              // Buat bounding box untuk child
-              const boundingBox = new THREE.Box3().setFromObject(object);
+  buildingModel.traverse((child) => {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
 
-              boundingBox.min.multiply(object.scale);
-              boundingBox.max.multiply(object.scale);
-              boundingBox.min.add(object.position);
-              boundingBox.max.add(object.position);
+      // Create bounding box helper
+      childBoundingBox = new THREE.Box3().setFromObject(child);
+      childBoundingBox.min.multiply(buildingModel.scale);
+      childBoundingBox.max.multiply(buildingModel.scale);
+      childBoundingBox.min.add(buildingModel.position);
+      childBoundingBox.max.add(buildingModel.position);
+      childBBoxHelper = new THREE.Box3Helper(childBoundingBox, 0xff0000);
+      // enviromentBoundingBox.push(childBoundingBox)
+      scene.add(childBBoxHelper);
+    }
+  });
 
-              // Tambahkan bounding box ke array dan sesuaikan dengan skala dan posisi objek
-              enviromentBoundingBox.push(boundingBox);
-
-              // Tambahkan bounding box helper untuk debugging
-              const boxHelper = new THREE.BoxHelper(child, 0x00ff00);
-              scene.add(boxHelper);
-          }
-      });
-  }
-  // Aktifkan bayangan pada objek yang dimuat
-  setShadowProperties(object);
-
-  scene.add(object);
+  scene.add(buildingModel);
 });
 
 //___________________________________LOAD WATER________________________________________
@@ -216,7 +210,6 @@ witchLoader.load("/Witch.glb", (witch) => {
   scene.add(witchModel);
   witchModel.scale.set(0.2, 0.2, 0.2);
   witchModel.position.set(20*0.2, 2*0.2, 10*0.2);
-  witchModel.updateMatrixWorld(true);
   witchModel.traverse((child) => {
     if (child.isMesh) {
       child.castShadow = true;
@@ -225,10 +218,8 @@ witchLoader.load("/Witch.glb", (witch) => {
   });
 
   // Membuat bounding box
-  const witchBoundingBox = new THREE.Box3().setFromObject(witchModel);
-
-  // Menggunakan BoxHelper dengan witchModel, bukan witchBoundingBox
-  const witchBoxHelper = new THREE.BoxHelper(witchModel, 0x0000ff); // Biru untuk witch
+  witchBoundingBox = new THREE.Box3();
+  witchBoxHelper = new THREE.Box3Helper(witchBoundingBox, 0x0000ff); // Blue for witch
   scene.add(witchBoxHelper);
 
   const clips = witch.animations;
@@ -416,6 +407,7 @@ window.addEventListener("resize", () => {
 // Animate loop
 function animate(time) {
   renderer.render(scene, camera);
+  requestAnimationFrame(animate);
 
   const delta = clock.getDelta();
   if (mixer2) mixer2.update(delta);
@@ -454,10 +446,10 @@ function animate(time) {
   sunLight.position.copy(sun);
   sunLight.color.copy(sky.material.uniforms['sunColor'].value);
 
-  //update box witch
+  // Update bounding boxes and helpers for the witch
   if (witchModel && witchBoundingBox) {
     witchBoundingBox.setFromObject(witchModel);
-    scene.remove(witchBBoxHelper);
+    scene.remove(witchBoxHelper);
     witchBoxHelper = new THREE.Box3Helper(
       witchBoundingBox,
       0x0000ff
@@ -465,11 +457,7 @@ function animate(time) {
     scene.add(witchBoxHelper);
   }
 
-  renderer.render(scene,camera);
-
   time_prev = time;
-  requestAnimationFrame(animate);
-
 }
 
 requestAnimationFrame(animate);
