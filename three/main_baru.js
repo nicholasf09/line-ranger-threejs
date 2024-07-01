@@ -85,7 +85,7 @@ buildingLoader.load("resources/envreborn rumah.gltf", function (building) {
       childBoundingBox.min.add(buildingModel.position);
       childBoundingBox.max.add(buildingModel.position);
       childBBoxHelper = new THREE.Box3Helper(childBoundingBox, 0xff0000);
-      // enviromentBoundingBox.push(childBoundingBox)
+      enviromentBoundingBox.push(childBoundingBox)
       scene.add(childBBoxHelper);
     }
   });
@@ -218,7 +218,7 @@ witchLoader.load("/Witch.glb", (witch) => {
   });
 
   // Membuat bounding box
-  witchBoundingBox = new THREE.Box3();
+  witchBoundingBox = new THREE.Box3()
   witchBoxHelper = new THREE.Box3Helper(witchBoundingBox, 0x0000ff); // Blue for witch
   scene.add(witchBoxHelper);
 

@@ -61,7 +61,12 @@ export class Player {
     var direction = new THREE.Vector3(0, 0, 0);
     let verticalMouseLookSpeed = this.mouseLookSpeed;
     //animation
-    if(this.checkCollision()) this.controller.keys["forward"] = false;
+    if(this.checkCollision()){
+      this.controller.keys["forward"] = false;
+      this.controller.keys["left"] = false;
+      // this.controller.keys["backward"] = false;
+      this.controller.keys["right"] = false;
+    } 
     if (this.controller.keys["Shift"]) {
       this.switchAnimation(this.adventurerActions["run"]);
     } else if (
