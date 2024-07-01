@@ -11,16 +11,16 @@ import { Sky } from 'three/addons/objects/Sky.js';
 // Clock
 const clock = new THREE.Clock();
 // Mixers
-let mixer, mixer1, mixer2;
+let farmerMixer, kingMixer, banditMixer, witchMixer;
 // Player
 let player, ghostPlayer, mainPlayer;
 // Bounding box
-let stagBoundingBox = null;
+let farmerBoundingBox = null;
 let walkBoundingBox = null;
 let witchBoundingBox = null;
 let enviromentBoundingBox = [];
 // Initialize bounding boxes for debugging visualization
-let stagBBoxHelper, walkBBoxHelper, witchBoxHelper;
+let witchBoxHelper;
 
 // Sizes
 const sizes = {
@@ -119,16 +119,6 @@ water.rotation.x = - Math.PI / 2;
 scene.add( water );
 
 //_____________________________________LOAD SKY_________________________________________
-// new RGBELoader()
-// 	.setPath( '' )
-// 	.load( 'kloppenheim_02_puresky_8k.hdr', function ( texture ) {
-
-// 		texture.mapping = THREE.EquirectangularReflectionMapping;
-
-// 		scene.background = texture;
-// 		scene.environment = texture;
-
-// 	} );
 const sky = new Sky();
 sky.scale.setScalar(450000);
 scene.add(sky);
@@ -223,24 +213,24 @@ witchLoader.load("/Witch.glb", (witch) => {
   scene.add(witchBoxHelper);
 
   const clips = witch.animations;
-  mixer2 = new THREE.AnimationMixer(witchModel);
+  witchMixer = new THREE.AnimationMixer(witchModel);
   witchActions = {
-    idle: mixer2.clipAction(
+    idle: witchMixer.clipAction(
       THREE.AnimationClip.findByName(clips, "CharacterArmature|Idle")
     ),
-    walk: mixer2.clipAction(
+    walk: witchMixer.clipAction(
       THREE.AnimationClip.findByName(clips, "CharacterArmature|Walk")
     ),
-    run: mixer2.clipAction(
+    run: witchMixer.clipAction(
       THREE.AnimationClip.findByName(clips, "CharacterArmature|Run")
     ),
-    wave: mixer2.clipAction(
+    wave: witchMixer.clipAction(
       THREE.AnimationClip.findByName(clips, "CharacterArmature|Wave")
     ),
-    interact: mixer2.clipAction(
+    interact: witchMixer.clipAction(
       THREE.AnimationClip.findByName(clips, "CharacterArmature|Interact")
     ),
-    death: mixer2.clipAction(
+    death: witchMixer.clipAction(
       THREE.AnimationClip.findByName(clips, "CharacterArmature|Death")
     ),
   };
@@ -266,6 +256,121 @@ function createPlayer() {
   mainPlayer = player;
 }
 
+//______________________________LOAD FARMER_____________________________
+const farmerLoader = new GLTFLoader();
+let farmerModel;
+
+farmerLoader.load("/Farmer.glb", (farmer) => {
+  farmerModel = farmer.scene;
+  scene.add(farmerModel);
+  farmerModel.scale.set(0.2, 0.2, 0.2);
+  farmerModel.position.set(-21*0.2, 1.95*0.2, 24*0.2);
+  farmerModel.rotation.y = THREE.MathUtils.degToRad(120);
+  farmerModel.traverse((child) => {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+
+      // Create bounding box helper
+      childBoundingBox = new THREE.Box3().setFromObject(child);
+      childBoundingBox.min.multiply(farmerModel.scale);
+      childBoundingBox.max.multiply(farmerModel.scale);
+      childBoundingBox.min.add(farmerModel.position);
+      childBoundingBox.max.add(farmerModel.position);
+      childBBoxHelper = new THREE.Box3Helper(childBoundingBox, 0xff0000);
+      enviromentBoundingBox.push(childBoundingBox)
+      scene.add(childBBoxHelper);
+    }
+  });
+
+  const clips = farmer.animations;
+  farmerMixer = new THREE.AnimationMixer(farmerModel);
+  const wavingClip = THREE.AnimationClip.findByName(clips, "CharacterArmature|Wave");
+
+  if (wavingClip) {
+    const wavingAction = farmerMixer.clipAction(wavingClip);
+    wavingAction.setLoop(THREE.LoopRepeat);
+    wavingAction.play();
+  } 
+});
+
+//______________________________LOAD KING_____________________________
+const kingLoader = new GLTFLoader();
+let kingModel;
+
+kingLoader.load("/King.glb", (king) => {
+  kingModel = king.scene;
+  scene.add(kingModel);
+  kingModel.scale.set(0.2, 0.2, 0.2);
+  kingModel.position.set(-1*0.2, 2.2*0.2, 26*0.2);
+  kingModel.rotation.y = THREE.MathUtils.degToRad(225);
+  kingModel.traverse((child) => {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+
+      // Create bounding box helper
+      childBoundingBox = new THREE.Box3().setFromObject(child);
+      childBoundingBox.min.multiply(kingModel.scale);
+      childBoundingBox.max.multiply(kingModel.scale);
+      childBoundingBox.min.add(kingModel.position);
+      childBoundingBox.max.add(kingModel.position);
+      childBBoxHelper = new THREE.Box3Helper(childBoundingBox, 0xff0000);
+      enviromentBoundingBox.push(childBoundingBox)
+      scene.add(childBBoxHelper);
+    }
+  });
+
+  const clips = king.animations;
+  kingMixer = new THREE.AnimationMixer(kingModel);
+  const wavingClip = THREE.AnimationClip.findByName(clips, "CharacterArmature|Kick_Right");
+
+  if (wavingClip) {
+    const wavingAction = kingMixer.clipAction(wavingClip);
+    wavingAction.setLoop(THREE.LoopRepeat);
+    wavingAction.play();
+  } 
+});
+
+//______________________________LOAD Bandit_____________________________
+const banditLoader = new GLTFLoader();
+let banditModel;
+
+banditLoader.load("/Bandit.glb", (bandit) => {
+  banditModel = bandit.scene;
+  scene.add(banditModel);
+  banditModel.scale.set(0.2, 0.2, 0.2);
+  banditModel.position.set(-1.8*0.2, 2.2*0.2, 25*0.2);
+  banditModel.rotation.y = THREE.MathUtils.degToRad(60);
+  banditModel.traverse((child) => {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+
+      // Create bounding box helper
+      childBoundingBox = new THREE.Box3().setFromObject(child);
+      childBoundingBox.min.multiply(banditModel.scale);
+      childBoundingBox.max.multiply(banditModel.scale);
+      childBoundingBox.min.add(banditModel.position);
+      childBoundingBox.max.add(banditModel.position);
+      childBBoxHelper = new THREE.Box3Helper(childBoundingBox, 0xff0000);
+      enviromentBoundingBox.push(childBoundingBox)
+      scene.add(childBBoxHelper);
+    }
+  });
+
+  const clips = bandit.animations;
+  banditMixer = new THREE.AnimationMixer(banditModel);
+  const wavingClip = THREE.AnimationClip.findByName(clips, "CharacterArmature|Punch_Right");
+
+  if (wavingClip) {
+    const wavingAction = banditMixer.clipAction(wavingClip);
+    wavingAction.setLoop(THREE.LoopRepeat);
+    wavingAction.play();
+  } 
+});
+
+//________________________________CREATE GHOST CAM_______________________________
 const ghostGeometry = new THREE.BoxGeometry(10, 20, 10);
 const ghostMaterial = new THREE.MeshBasicMaterial({
   color: 0xffffff,
@@ -304,9 +409,7 @@ window.addEventListener("keydown", (event) => {
   }
 });
 
-//Geometry
-const objects = [];
-
+//_____________________________________CREATE LIGHT JALAN_______________________________
 // Fungsi untuk membuat dan mengatur cahaya
 function createLight(position) {
     const light = new THREE.PointLight(0xffffff, 5, 3.5);
@@ -347,12 +450,6 @@ for(var i = 0; i < lightPositions.length; i++){
 lightPositions.forEach(position => {
     createLight(position);
 });
-
-
-// Others
-// scene.fog = new THREE.Fog(0x88939e, 100, 250);
-// let stagSpeed = 0.1;
-// let rotateStag = false;
 
 var time_prev = 0;
 
@@ -410,7 +507,7 @@ function animate(time) {
   requestAnimationFrame(animate);
 
   const delta = clock.getDelta();
-  if (mixer2) mixer2.update(delta);
+  if (witchMixer) witchMixer.update(delta);
   if (player) {
     // Check if player is defined before updating
     player.update(delta);
@@ -424,9 +521,24 @@ function animate(time) {
   bottleGroup.rotation.y += 0.01;
   bottleGroup.rotation.x += 0.01;
 
-  //_____________________________WATER______________________________
+  // Update mixer jika ada animasi
+  if (farmerMixer) {
+    farmerMixer.update(delta);
+  }
+
+  if (kingMixer) {
+    kingMixer.update(delta);
+  }
+
+  if (banditMixer) {
+    banditMixer.update(delta);
+  }
+
+
+  //_____________________________UPDATE WATER______________________________
   water.material.uniforms[ 'time' ].value += 0.10 / 60.0;
 
+  //_____________________________UPDATE SKY_______________________________
   // Update the sky
   if(tonight){
     parameters.inclination += 0.00025; // Adjust the speed of the day/night cycle
@@ -446,6 +558,7 @@ function animate(time) {
   sunLight.position.copy(sun);
   sunLight.color.copy(sky.material.uniforms['sunColor'].value);
 
+  //__________________________________UPDATE BOUNDING BOX & HELPER WITCH_______________________
   // Update bounding boxes and helpers for the witch
   if (witchModel && witchBoundingBox) {
     witchBoundingBox.setFromObject(witchModel);
