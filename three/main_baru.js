@@ -11,7 +11,7 @@ import { Sky } from 'three/addons/objects/Sky.js';
 // Clock
 const clock = new THREE.Clock();
 // Mixers
-let farmerMixer, kingMixer, banditMixer, witchMixer;
+let farmerMixer, kingMixer, banditMixer, frogMixer, witchMixer;
 // Player
 let player, ghostPlayer, mainPlayer;
 // Bounding box
@@ -370,6 +370,46 @@ banditLoader.load("/Bandit.glb", (bandit) => {
   } 
 });
 
+//______________________________LOAD FROG_____________________________
+const frogLoader = new GLTFLoader();
+let frogModel;
+
+frogLoader.load("/Frog.glb", (frog) => {
+  frogModel = frog.scene;
+  scene.add(frogModel);
+  frogModel.scale.set(0.02, 0.02, 0.02);
+  frogModel.position.set(18*0.2, 2.2*0.2, 10*0.2);
+  frogModel.rotation.y = THREE.MathUtils.degToRad(0);
+  frogModel.traverse((child) => {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+
+      // Create bounding box helper
+      childBoundingBox = new THREE.Box3().setFromObject(child);
+      childBoundingBox.min.multiply(frogModel.scale);
+      childBoundingBox.max.multiply(frogModel.scale);
+      childBoundingBox.min.add(frogModel.position);
+      childBoundingBox.max.add(frogModel.position);
+      childBBoxHelper = new THREE.Box3Helper(childBoundingBox, 0xff0000);
+      enviromentBoundingBox.push(childBoundingBox)
+      scene.add(childBBoxHelper);
+    }
+  });
+
+  const clips = frog.animations;
+  frogMixer = new THREE.AnimationMixer(frogModel);
+  const wavingClip = THREE.AnimationClip.findByName(clips, "FrogArmature|Frog_Jump");
+
+  if (wavingClip) {
+    const wavingAction = frogMixer.clipAction(wavingClip);
+    wavingAction.setLoop(THREE.LoopRepeat);
+    wavingAction.play();
+  } 
+});
+
+let frogGo = true;
+
 //________________________________CREATE GHOST CAM_______________________________
 const ghostGeometry = new THREE.BoxGeometry(10, 20, 10);
 const ghostMaterial = new THREE.MeshBasicMaterial({
@@ -533,6 +573,26 @@ function animate(time) {
   if (banditMixer) {
     banditMixer.update(delta);
   }
+
+  if(frogMixer){
+    frogMixer.update(delta);
+  }
+
+  // if(frogModel){
+  //   if(frogModel.position.z >= 20*0.2){
+  //     frogModel.rotation.y = THREE.MathUtils.degToRad(180);
+  //     frogGo = false;
+  //   } else if (frogModel.position.z < -5*0.2) {
+  //     frogModel.rotation.y = THREE.MathUtils.degToRad(0);
+  //     frogGo = true;
+  //   }
+
+  //   if(frogGo){
+  //     frogModel.position.z += 1
+  //   } else {
+  //     frogModel.position.z -= 1
+  //   }
+  // }
 
 
   //_____________________________UPDATE WATER______________________________
