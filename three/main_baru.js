@@ -4,9 +4,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { Player, PlayerController, ThirdPersonCamera } from "./person.js";
 import { Ghost, GhostController, GhostCamera } from "./ghost.js";
 import { Water } from 'three/addons/objects/Water.js';
-import { RGBELoader } from 'three/addons/loaders/RGBELoader.js'
 import { Sky } from 'three/addons/objects/Sky.js';
-
 
 // Clock
 const clock = new THREE.Clock();
@@ -430,8 +428,8 @@ frogLoader.load("/Frog.glb", (frog) => {
       childBoundingBox.min.add(frogModel.position);
       childBoundingBox.max.add(frogModel.position);
       childBBoxHelper = new THREE.Box3Helper(childBoundingBox, 0xff0000);
-      enviromentBoundingBox.push(childBoundingBox)
-      scene.add(childBBoxHelper);
+      // enviromentBoundingBox.push(childBoundingBox)
+      // scene.add(childBBoxHelper);
     }
   });
 
@@ -446,7 +444,7 @@ frogLoader.load("/Frog.glb", (frog) => {
   } 
 });
 
-let frogGo = true;
+let frogSpeed = 1*0.002;
 
 //________________________________CREATE GHOST CAM_______________________________
 const ghostGeometry = new THREE.BoxGeometry(10, 20, 10);
@@ -620,22 +618,16 @@ function animate(time) {
     frogMixer.update(delta);
   }
 
-  // if(frogModel){
-  //   if(frogModel.position.z >= 20*0.2){
-  //     frogModel.rotation.y = THREE.MathUtils.degToRad(180);
-  //     frogGo = false;
-  //   } else if (frogModel.position.z < -5*0.2) {
-  //     frogModel.rotation.y = THREE.MathUtils.degToRad(0);
-  //     frogGo = true;
-  //   }
-
-  //   if(frogGo){
-  //     frogModel.position.z += 1
-  //   } else {
-  //     frogModel.position.z -= 1
-  //   }
-  // }
-
+  if(frogModel){
+    frogModel.position.z += frogSpeed;
+    if(frogModel.position.z >= 20*0.2){
+      frogModel.rotation.y = THREE.MathUtils.degToRad(180);
+      frogSpeed *= -1
+    } else if (frogModel.position.z < -5*0.2) {
+      frogModel.rotation.y = THREE.MathUtils.degToRad(0);
+      frogSpeed *= -1
+    }
+  }
 
   //_____________________________UPDATE WATER______________________________
   water.material.uniforms[ 'time' ].value += 0.10 / 60.0;
