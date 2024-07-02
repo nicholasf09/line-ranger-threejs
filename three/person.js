@@ -25,14 +25,16 @@ export class Player {
     this.cameraBaseOffset = new THREE.Vector3(0, 2*0.2, -5*0.2); // For TPP
     this.cameraHeadOffset = new THREE.Vector3(0, 2*0.2, 0); // For FPP
     this.zoomLevel = 0;
-    this.zoomIncrement = 5;
+    this.zoomIncrement = 0.06;
     this.camera.positionOffset = this.cameraBaseOffset.clone();
     this.camera.targetOffset = new THREE.Vector3(0, 2*0.2, 0);
     this.mouseLookSpeed = 1.5;
     this.cameraRotationY = 0;
     this.cameraRotationZ = 0;
+    this.xLevel = 0;
     this.isFpp = false;
     this.isZoomed = false;
+    this.isZooming = false;
     this.camera.setup(this.adventurerModel.position, this.currentRotation);
 
     this.activeAction = this.adventurerActions["idle"];
@@ -119,27 +121,48 @@ export class Player {
     if (this.controller.keys["rotateRight"]) {
       this.cameraRotationY -= this.rotationSpeed * dt;
     }
-    if (this.controller.keys["zoomIn"]) {
-      this.zoomLevel -= this.zoomIncrement;
+
+    if (this.controller.keys["zoomIn"] || this.controller.keys["zoomOut"]) {
+      this.isZooming = true; // Set zooming state
+      this.zoomLevel += this.controller.keys["zoomIn"]
+        ? -this.zoomIncrement
+        : this.zoomIncrement;
+      
+      if (this.controller.keys["zoomOut"] && this.isFpp){
+        this.zoomLevel -= this.zoomIncrement;
+      }
       const zoomFactor = this.zoomLevel * 0.1;
-      if (!this.isFpp && -5*0.2 - zoomFactor < -0) {
-        const zoomedOffset = new THREE.Vector3(0, 2*0.2, -5*0.2 - zoomFactor);
-        this.camera.positionOffset.copy(zoomedOffset);
-      }
-    }
-    if (this.controller.keys["zoomOut"]) {
-      this.zoomLevel += this.zoomIncrement;
       if (!this.isFpp) {
-        const zoomFactor = this.zoomLevel * 0.1;
-        const zoomedOffset = new THREE.Vector3(0, 2*0.2, -5*0.2 - zoomFactor);
+        const zoomedOffset = new THREE.Vector3(
+          0,
+          2*0.2 + zoomFactor * this.xLevel,
+          -5*0.2 - zoomFactor
+        ); 
         this.camera.positionOffset.copy(zoomedOffset);
       }
-    }
-    if (this.controller.keys["resetZoom"]) {
+      else{
+        const zoomedOffset = new THREE.Vector3(
+          0,
+          2*0.2 + zoomFactor * this.xLevel,
+          0 - zoomFactor
+        ); 
+        this.camera.positionOffset.copy(zoomedOffset);
+
+      }
+    } else {
       this.zoomLevel = 0;
+      this.isZooming = false; // Reset zooming state
       if (this.isFpp) this.camera.positionOffset.copy(this.cameraHeadOffset);
       else this.camera.positionOffset.copy(this.cameraBaseOffset);
     }
+
+
+    // if (this.controller.keys["resetZoom"]) {
+    //   this.zoomLevel = 0;
+    //   this.isZooming = false; // Reset zooming state
+    //   if (this.isFpp) this.camera.positionOffset.copy(this.cameraHeadOffset);
+    //   else this.camera.positionOffset.copy(this.cameraBaseOffset);
+    // }
     const headTiltSpeed = 0.1;
     if (this.isFpp) {
       if (this.controller.keys["tiltLeft"]) {
@@ -307,7 +330,7 @@ export class PlayerController {
       case "ArrowRight":
         this.keys["rotateRight"] = true;
         break;
-      case "+":
+      case "=":
         this.keys["zoomIn"] = true;
         break;
       case "-":
@@ -353,7 +376,7 @@ export class PlayerController {
       case "ArrowRight":
         this.keys["rotateRight"] = false;
         break;
-      case "+":
+      case "=":
         this.keys["zoomIn"] = false;
         break;
       case "-":
@@ -387,20 +410,16 @@ export class ThirdPersonCamera {
       rotation.y + cameraRotationY
     );
 
-    if (!isFpp) {
       temp.applyAxisAngle(
         new THREE.Vector3(0, 0, 1),
         rotation.z + cameraRotationZ
       );
-    }
+
 
     const zoomFactor = zoomLevel * 0.1;
 
-    if (isFpp) {
-      temp.set(target.x, target.y + 2*0.2, target.z - zoomFactor);
-    } else {
-      temp.add(target);
-    }
+    temp.add(target);
+
 
     this.camera.position.copy(temp);
 
