@@ -161,7 +161,7 @@ if (this.controller.keys["headUp"]) {
   this.cameraRotationX = THREE.MathUtils.lerp(this.cameraRotationX, 0, rotationReturnSpeed);
 }
 
-this.currentRotation.x = this.cameraRotationX;
+let cameraRotation = new THREE.Euler(this.cameraRotationX, this.currentRotation.y, this.currentRotation.z);
     
     //_______________________________________________ZOOM IN/OUT_________________________________________
   if (this.controller.keys["zoomIn"] || this.controller.keys["zoomOut"]) {
@@ -208,7 +208,7 @@ this.currentRotation.x = this.cameraRotationX;
 
     //_______________________________________________HEAD TILT_______________________________________________
     const headTiltSpeed = 0.1;
-    const maxTiltAngle = 15 * (Math.PI / 180);
+    const maxTiltAngle = 5 * (Math.PI / 180);
 
     if (this.isFpp) {
       if (this.controller.keys["tiltLeft"]) {
@@ -273,14 +273,7 @@ this.currentRotation.x = this.cameraRotationX;
 
     this.adventurerModel.position.add(direction);
     this.adventurerModel.rotation.copy(this.currentRotation);
-    this.camera.setup(
-      this.adventurerModel.position,
-      this.currentRotation,
-      this.cameraRotationY,
-      this.isFpp,
-      this.cameraRotationZ,
-      this.zoomLevel
-    );
+    this.camera.setup(this.adventurerModel.position, cameraRotation, this.cameraRotationY, this.isFpp, this.cameraRotationZ, this.zoomLevel);
   }
 
 }

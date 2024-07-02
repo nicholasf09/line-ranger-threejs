@@ -121,6 +121,7 @@ var water = new Water(
 );
 
 water.rotation.x = - Math.PI / 2;
+water.receiveShadow = true;
 
 scene.add( water );
 
@@ -151,6 +152,35 @@ const sunColorDay = new THREE.Color(0x222222); // White color for day
 const ambientLight = new THREE.AmbientLight(0xadd8e6, 1); 
 scene.add(ambientLight);
 
+const spotLight = new THREE.SpotLight(0xffffff);
+spotLight.position.set(0.2*38, 0.2*30, 0.2*-50); // Posisi spotlight
+spotLight.angle = Math.PI / 180; // Sudut pancaran cahaya
+spotLight.penumbra = 0.2; // Penurunan intensitas cahaya di tepi
+spotLight.decay = 1; // Penurunan intensitas cahaya seiring jarak
+spotLight.distance = 0; // Jarak maksimum cahaya
+spotLight.castShadow = true; // Mengaktifkan bayangan
+spotLight.intensity = 500;
+scene.add(spotLight);
+
+spotLight.target.position.set(0.2, 0.2*5, 0.2);
+scene.add(spotLight.target);
+
+const spotLightHelper = new THREE.SpotLightHelper(spotLight, 0x0F9B34);
+scene.add(spotLightHelper);
+
+const lightMercusuar = new THREE.PointLight(0xffffff, 100, 1000);
+    lightMercusuar.position.set(0.2*38, 0.2*30, 0.2*-50);
+    lightMercusuar.castShadow = true;
+    lightMercusuar.shadow.mapSize.width = 1024; // Increase shadow map resolution
+    lightMercusuar.shadow.mapSize.height = 1024; // Increase shadow map resolution
+    lightMercusuar.shadow.camera.near = 0.5; // Adjust near clipping plane of shadow camera
+    lightMercusuar.shadow.camera.far = 500; // Adjust far clipping plane of shadow camera
+    lightMercusuar.shadow.camera.top = 200;
+    lightMercusuar.shadow.camera.bottom = -200;
+    lightMercusuar.shadow.camera.right = 200;
+    lightMercusuar.shadow.camera.left = -200;
+    scene.add(lightMercusuar);
+
 // Function to update the sky based on parameters
 function updateSky() {
   const theta = Math.PI * (parameters.inclination - 0.5);
@@ -167,26 +197,38 @@ function updateSky() {
     // Night to early night
     const t = parameters.inclination / 0.125;
     sky.material.uniforms['sunColor'].value.lerpColors(sunColorNight, sunColorEarlyNight, t);
+    spotLight.intensity = 0;  // Turn on spotLight
+    lightMercusuar.intensity = 0;  // Turn on lightMercusuar
   } else if (parameters.inclination < 0.25) {
     // Early night to dawn
     const t = (parameters.inclination - 0.125) / 0.125;
     sky.material.uniforms['sunColor'].value.lerpColors(sunColorEarlyNight, sunColorDawnDusk, t);
+    spotLight.intensity = 0;  // Turn on spotLight
+    lightMercusuar.intensity = 0;  // Turn on lightMercusuar
   } else if (parameters.inclination < 0.5) {
     // Dawn to day
     const t = (parameters.inclination - 0.25) / 0.25;
     sky.material.uniforms['sunColor'].value.lerpColors(sunColorDawnDusk, sunColorDay, t);
+    spotLight.intensity = 0;  // Turn on spotLight
+    lightMercusuar.intensity = 0;  // Turn on lightMercusuar
   } else if (parameters.inclination < 0.75) {
     // Day to dusk
     const t = (parameters.inclination - 0.5) / 0.25;
     sky.material.uniforms['sunColor'].value.lerpColors(sunColorDay, sunColorDawnDusk, t);
+    spotLight.intensity = 100;  // Turn on spotLight
+    lightMercusuar.intensity = 10;  // Turn on lightMercusuar
   } else if (parameters.inclination < 0.875) {
     // Dusk to early night
     const t = (parameters.inclination - 0.75) / 0.125;
     sky.material.uniforms['sunColor'].value.lerpColors(sunColorDawnDusk, sunColorEarlyNight, t);
+    spotLight.intensity = 100;  // Turn on spotLight
+    lightMercusuar.intensity = 10;  // Turn on lightMercusuar
   } else {
     // Early night to night
     const t = (parameters.inclination - 0.875) / 0.125;
     sky.material.uniforms['sunColor'].value.lerpColors(sunColorEarlyNight, sunColorNight, t);
+    spotLight.intensity = 10;  // Turn on spotLight
+    lightMercusuar.intensity = 10;  // Turn on lightMercusuar
   }
 }
 
@@ -613,6 +655,17 @@ bottleGroup.add(cap);
 
 scene.add(bottleGroup);
 
+function updateSpotlightTarget(inclination) {
+  const radius = 5; // Jarak antara spotlight dan target
+  const angle = parameters.inclination * Math.PI * 2; // Mengubah inclination menjadi sudut dalam radian
+
+  const x = 0.7*Math.cos(angle*2) * radius;
+  const z = 1.7*Math.sin(angle*2) * radius;
+
+  spotLight.target.position.set(x, 0.2*2, z); // Mengatur posisi target dalam bentuk lingkaran
+  spotLightHelper.position.set(x, 0.2 * 2, z);;
+}
+
 // Resize
 window.addEventListener("resize", () => {
   sizes.height = window.innerHeight;
@@ -673,7 +726,7 @@ function animate(time) {
     if(frogModel.position.z >= 20*0.2){
       frogModel.rotation.y = THREE.MathUtils.degToRad(180);
       frogSpeed *= -1
-    } else if (frogModel.position.z < -5*0.2) {
+    } else if (frogModel.position.z < 5*0.2) {
       frogModel.rotation.y = THREE.MathUtils.degToRad(0);
       frogSpeed *= -1
     }
@@ -685,10 +738,11 @@ function animate(time) {
   //_____________________________UPDATE SKY_______________________________
   // Update the sky
   if(tonight){
-    parameters.inclination += 0.00025; // Adjust the speed of the day/night cycle
+    parameters.inclination += 0.0025; // Adjust the speed of the day/night cycle
+    
   }
   else{
-    parameters.inclination -= 0.00025; // Adjust the speed of the day/night cycle   
+    parameters.inclination -= 0.0025; // Adjust the speed of the day/night cycle
   }
   
   if (parameters.inclination >= 1) {
@@ -696,8 +750,9 @@ function animate(time) {
   } else if (parameters.inclination <= 0){
     tonight=true;
   }
-  updateSky();
 
+  updateSpotlightTarget(0.025);
+  updateSky();
   // Update sun light position and color
   sunLight.position.copy(sun);
   sunLight.color.copy(sky.material.uniforms['sunColor'].value);
