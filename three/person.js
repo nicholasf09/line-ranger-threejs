@@ -31,6 +31,7 @@ export class Player {
     this.mouseLookSpeed = 1.5;
     this.cameraRotationY = 0;
     this.cameraRotationZ = 0;
+    this.cameraRotationX = 0;
     this.xLevel = 0;
     this.isFpp = false;
     this.isZoomed = false;
@@ -141,8 +142,26 @@ if (this.controller.keys["rotateLeft"]) {
    this.cameraRotationY = THREE.MathUtils.lerp(this.cameraRotationY, 0, rotationReturnSpeed);
 }
 
+//_______________________________________HEAD UP/DOWN______________________________________
+const maxHeadRotationAngleX = 45 * (Math.PI / 180); // Batas rotasi kepala dalam FPP (45 derajat) untuk Pitch
+if (this.controller.keys["headUp"]) {
+  if (this.isFpp) {
+    this.cameraRotationX = Math.max(this.cameraRotationX - this.rotationSpeed * dt, -maxHeadRotationAngleX);
+  } else {
+    this.cameraRotationX -= this.rotationSpeed * dt;
+  }
+} else if (this.controller.keys["headDown"]) {
+  if (this.isFpp) {
+    this.cameraRotationX = Math.min(this.cameraRotationX + this.rotationSpeed * dt, maxHeadRotationAngleX);
+  } else {
+    this.cameraRotationX += this.rotationSpeed * dt;
+  }
+} else {
+  // Jika tidak ada tombol naik atau turun yang ditekan, kembalikan kamera ke posisi semula
+  this.cameraRotationX = THREE.MathUtils.lerp(this.cameraRotationX, 0, rotationReturnSpeed);
+}
 
-
+this.currentRotation.x = this.cameraRotationX;
     
     //_______________________________________________ZOOM IN/OUT_________________________________________
   if (this.controller.keys["zoomIn"] || this.controller.keys["zoomOut"]) {
@@ -363,6 +382,14 @@ export class PlayerController {
       case "ArrowRight":
         this.keys["rotateRight"] = true;
         break;
+      case "U":
+      case "u":
+        this.keys["headUp"] = true;
+        break;
+      case "I":
+      case "i":
+        this.keys["headDown"] = true;
+        break;
       case "=":
         this.keys["zoomIn"] = true;
         break;
@@ -408,6 +435,14 @@ export class PlayerController {
         break;
       case "ArrowRight":
         this.keys["rotateRight"] = false;
+        break;
+      case "U":
+      case "u":
+        this.keys["headUp"] = false;
+        break;
+      case "I":
+      case "i":
+        this.keys["headDown"] = false;
         break;
       case "=":
         this.keys["zoomIn"] = false;
