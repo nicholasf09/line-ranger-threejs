@@ -9,7 +9,7 @@ import { Sky } from 'three/addons/objects/Sky.js';
 // Clock
 const clock = new THREE.Clock();
 // Mixers
-let farmerMixer, kingMixer, banditMixer, lionFishMixer, frogMixer, witchMixer;
+let farmerMixer, kingMixer, banditMixer, dogMixer, lionFishMixer, frogMixer, witchMixer;
 // Player
 let player, ghostPlayer, mainPlayer;
 // Bounding box
@@ -83,6 +83,14 @@ buildingLoader.load("resources/envreborn rumah.gltf", function (building) {
       childBoundingBox.min.add(buildingModel.position);
       childBoundingBox.max.add(buildingModel.position);
       childBBoxHelper = new THREE.Box3Helper(childBoundingBox, 0xff0000);
+      
+      if(child.parent.name.includes("Blacksmith")){
+        childBoundingBox.expandByScalar(-1*0.2);
+      }
+      if(child.parent.name.includes("Sawmill")){
+        childBoundingBox.expandByScalar(-0.9*0.2);
+      }
+
       enviromentBoundingBox.push(childBoundingBox)
       scene.add(childBBoxHelper);
     }
@@ -368,6 +376,44 @@ banditLoader.load("/Bandit.glb", (bandit) => {
   } 
 });
 
+//______________________________LOAD DOG_____________________________
+const dogLoader = new GLTFLoader();
+let dogModel;
+
+dogLoader.load("/Shiba Inu.glb", (dog) => {
+  dogModel = dog.scene;
+  scene.add(dogModel);
+  dogModel.scale.set(0.05, 0.05, 0.05);
+  dogModel.position.set(18*0.2, 2.2*0.2, 27*0.2);
+  dogModel.rotation.y = THREE.MathUtils.degToRad(200);
+  dogModel.traverse((child) => {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+
+      // Create bounding box helper
+      childBoundingBox = new THREE.Box3().setFromObject(child);
+      childBoundingBox.min.multiply(dogModel.scale);
+      childBoundingBox.max.multiply(dogModel.scale);
+      childBoundingBox.min.add(dogModel.position);
+      childBoundingBox.max.add(dogModel.position);
+      childBBoxHelper = new THREE.Box3Helper(childBoundingBox, 0xff0000);
+      enviromentBoundingBox.push(childBoundingBox)
+      scene.add(childBBoxHelper);
+    }
+  });
+
+  const clips = dog.animations;
+  dogMixer = new THREE.AnimationMixer(dogModel);
+  const wavingClip = THREE.AnimationClip.findByName(clips, "Idle_2_HeadLow");
+
+  if (wavingClip) {
+    const wavingAction = dogMixer.clipAction(wavingClip);
+    wavingAction.setLoop(THREE.LoopRepeat);
+    wavingAction.play();
+  } 
+});
+
 //______________________________LOAD lionFish_____________________________
 const lionFishLoader = new GLTFLoader();
 let lionFishModel;
@@ -612,6 +658,10 @@ function animate(time) {
 
   if (lionFishMixer) {
     lionFishMixer.update(delta);
+  }
+
+  if (dogMixer) {
+    dogMixer.update(delta);
   }
 
   if(frogMixer){
