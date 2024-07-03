@@ -79,7 +79,7 @@ buildingLoader.load("resources/envreborn rumah.gltf", function (building) {
       childBoundingBox.max.multiply(buildingModel.scale);
       childBoundingBox.min.add(buildingModel.position);
       childBoundingBox.max.add(buildingModel.position);
-      childBBoxHelper = new THREE.Box3Helper(childBoundingBox, 0xff0000);
+      childBBoxHelper = new THREE.Box3Helper(childBoundingBox, 0xffffff);
       
       if(child.parent.name.includes("Blacksmith")){
         childBoundingBox.expandByScalar(-1*0.2);
@@ -144,7 +144,7 @@ const lightMercusuar = new THREE.PointLight(0xffffff, 500, 100000); // Adjust in
 lightMercusuar.position.set(0.2 * 50, 0.2 * 35, 0.2 * -60); // Ensure the position is correct
 lightMercusuar.castShadow = true; // Enable shadows
 
-const lightMercusuar2 = new THREE.PointLight(0xffffff, 500, 100000); // Adjust intensity and distance as needed
+const lightMercusuar2 = new THREE.PointLight(0xffffff, 50, 100000); // Adjust intensity and distance as needed
 lightMercusuar2.position.set(0.2 * 50, 0.2 * 35, 0.2 * -68); // Ensure the position is correct
 lightMercusuar2.castShadow = true; // Enable shadows
 
@@ -221,6 +221,7 @@ function updateSky() {
     sunLight.intensity = 30 * (1 - t) // Smooth intensity transition
     spotLight.intensity = 0;
     lightMercusuar.intensity = 0;
+    lightMercusuar2.intensity = 0;
   } 
   // else if (parameters.inclination < 0.25) {
   //   // Early night to dawn
@@ -236,8 +237,9 @@ function updateSky() {
     const t = (parameters.inclination - 0.25) / 0.25;
     sky.material.uniforms['sunColor'].value.lerpColors(sunColorDawnDusk, sunColorDay, t);
     sunLight.color.lerpColors(sunColorDawnDusk, sunColorDay, t);
-    sunLight.intensity = 30.0; // Full intensity during day
+    sunLight.intensity = 30 * (1 - t); // Full intensity during day
     spotLight.intensity = 0;
+    lightMercusuar2.intensity = 0;
     lightMercusuar.intensity = 0;
   } 
   else if (parameters.inclination < 0.75) {
@@ -248,15 +250,17 @@ function updateSky() {
     sunLight.intensity = 30 * (1 - t); // Full intensity during day
     spotLight.intensity = 100;
     lightMercusuar.intensity = 10;
+    lightMercusuar2.intensity = 10;
   }
   else {
     // Early night to night
     const t = (parameters.inclination - 0.875) / 0.125;
     sky.material.uniforms['sunColor'].value.lerpColors(sunColorEarlyNight, sunColorNight, t);
     sunLight.color.lerpColors(sunColorEarlyNight, sunColorNight, t);
-    sunLight.intensity = 10; // Very low intensity during night
+    sunLight.intensity = 30 * (1 - t); // Very low intensity during night
     spotLight.intensity = 10;
     lightMercusuar.intensity = 10;
+    lightMercusuar2.intensity = 10;
   }
 }
 
@@ -745,6 +749,8 @@ function animate(time) {
     // Check if player is defined before updating
     player.update(delta);
   }
+
+
 
   var dt = time - time_prev;
   dt *= 0.1;
