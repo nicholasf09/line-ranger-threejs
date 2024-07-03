@@ -129,7 +129,7 @@ scene.add( water );
 const spotLight = new THREE.SpotLight(0xffffff);
 spotLight.position.set(0.2*38, 0.2*30, 0.2*-50); // Posisi spotlight
 spotLight.angle = Math.PI / 180; // Sudut pancaran cahaya
-spotLight.penumbra = 0.2; // Penurunan intensitas cahaya di tepi
+spotLight.penumbra = 0.02; // Penurunan intensitas cahaya di tepi
 spotLight.decay = 1; // Penurunan intensitas cahaya seiring jarak
 spotLight.distance = 0; // Jarak maksimum cahaya
 spotLight.castShadow = true; // Mengaktifkan bayangan
@@ -263,11 +263,11 @@ var tonight = true;
 const witchLoader = new GLTFLoader();
 let witchModel, witchActions;
 
-witchLoader.load("/Witch.glb", (witch) => {
+witchLoader.load("/Farmer.glb", (witch) => {
   witchModel = witch.scene;
   scene.add(witchModel);
   witchModel.scale.set(0.2, 0.2, 0.2);
-  witchModel.position.set(20*0.2, 2*0.2, 10*0.2);
+  witchModel.position.set(20*0.2, 2.05*0.2, 10*0.2);
   witchModel.traverse((child) => {
     if (child.isMesh) {
       child.castShadow = true;
@@ -328,7 +328,7 @@ function createPlayer() {
 const farmerLoader = new GLTFLoader();
 let farmerModel;
 
-farmerLoader.load("/Farmer.glb", (farmer) => {
+farmerLoader.load("/Witch.glb", (farmer) => {
   farmerModel = farmer.scene;
   scene.add(farmerModel);
   farmerModel.scale.set(0.2, 0.2, 0.2);
@@ -639,16 +639,14 @@ var time_prev = 0;
 
 //______________________________BOTOL TRANSPARAN__________________________
 // Geometri dan Material untuk botol kaca
-const bottleGeometry = new THREE.CylinderGeometry(2, 2, 8, 32);
-const neckGeometry = new THREE.CylinderGeometry(1, 1, 2, 32);
-const capGeometry = new THREE.SphereGeometry(1, 32, 32);
+const bottleGeometry = new THREE.ConeGeometry(2, 50, 32);
 
 const glassMaterial = new THREE.MeshPhysicalMaterial({
     color: 0xffffff,
     metalness: 0,
     roughness: 0,
-    transmission: 1.0,  // This makes the material transparent
-    opacity: 0.4,
+    transmission: 0,  // This makes the material transparent
+    opacity: 0.8,
     reflectivity: 0.6,
     transparent: true,
     side: THREE.DoubleSide,
@@ -656,28 +654,16 @@ const glassMaterial = new THREE.MeshPhysicalMaterial({
 
 // Membuat botol
 const bottle = new THREE.Mesh(bottleGeometry, glassMaterial);
-bottle.scale.set(0.04,0.04,0.04);
+bottle.scale.set(0.4,0.4,0.4);
+bottle.position.set(0.2*38, 0.2*30, 0.2*-50);
 bottle.position.y = 5*0.04;
-
-const neck = new THREE.Mesh(neckGeometry, glassMaterial);
-neck.scale.set(0.04,0.04,0.04);
-neck.position.y = 9*0.04;
-
-const cap = new THREE.Mesh(capGeometry, glassMaterial);
-cap.scale.set(0.04,0.04,0.04);
-cap.position.y = 10.5*0.04;
-
-// Menambahkan botol ke scene
-const bottleGroup = new THREE.Group();
-bottleGroup.add(bottle);
-bottleGroup.add(neck);
-bottleGroup.add(cap);
-
-scene.add(bottleGroup);
+const bottleHelper = new THREE.BoxHelper(bottle, 0x8fffff);
+// scene.add(bottleHelper);
+// scene.add(bottle);
 
 function updateSpotlightTarget(inclination) {
   const radius = 5; // Jarak antara spotlight dan target
-  const angle = parameters.inclination * Math.PI * 2; // Mengubah inclination menjadi sudut dalam radian
+  const angle = inclination * Math.PI * 2; // Mengubah inclination menjadi sudut dalam radian
 
   const x = 0.7*Math.cos(angle*2) * radius;
   const z = 1.7*Math.sin(angle*2) * radius;
@@ -710,11 +696,6 @@ function animate(time) {
 
   var dt = time - time_prev;
   dt *= 0.1;
-
-  // Rotasi botol
-  bottleGroup.rotation.z += 0.01;
-  bottleGroup.rotation.y += 0.01;
-  bottleGroup.rotation.x += 0.01;
 
   // Update mixer jika ada animasi
   if (farmerMixer) {
@@ -758,11 +739,11 @@ function animate(time) {
   //_____________________________UPDATE SKY_______________________________
   // Update the sky
   if(tonight){
-    parameters.inclination += 0.00025; // Adjust the speed of the day/night cycle
+    parameters.inclination += 0.0025; // Adjust the speed of the day/night cycle
     
   }
   else{
-    parameters.inclination -= 0.00025; // Adjust the speed of the day/night cycle
+    parameters.inclination -= 0.0025; // Adjust the speed of the day/night cycle
   }
   
   if (parameters.inclination >= 1) {
@@ -771,7 +752,7 @@ function animate(time) {
     tonight = true;
   }
 
-  updateSpotlightTarget(0.025);
+  updateSpotlightTarget(parameters.inclination * 1.5);
   updateSky();
 
   // Update sun light position and color
