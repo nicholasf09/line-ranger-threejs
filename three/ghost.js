@@ -1,12 +1,12 @@
 import * as THREE from "three";
 
 export class Ghost {
-  constructor(camera, controller, scene, speed, adventurerModel, renderer) {
+  constructor(camera, controller, scene, speed, ghostModel, renderer) {
     this.camera = camera;
     this.controller = controller;
     this.scene = scene;
     this.speed = speed;
-    this.adventurerModel = adventurerModel;
+    this.ghostModel = ghostModel;
     this.renderer = renderer;
     this.rotationSpeed = Math.PI / 2;
     this.currentRotation = new THREE.Euler(0, 0, 0);
@@ -15,7 +15,7 @@ export class Ghost {
     this.camera.targetOffset = new THREE.Vector3(0, 2*0.2, 0);
     this.mouseLookSpeed = 1.5;
     this.cameraRotationY = 0;
-    this.camera.setup(this.adventurerModel.position, this.currentRotation);
+    this.camera.setup(this.ghostModel.position, this.currentRotation);
   }
 
   update(dt) {
@@ -36,11 +36,11 @@ export class Ghost {
     }
 
     if (this.controller.keys["up"]) {
-       this.adventurerModel.position.y += this.speed * dt;
+       this.ghostModel.position.y += this.speed * dt;
     }
 
     if (this.controller.keys["down"]) {
-       this.adventurerModel.position.y -= this.speed * dt;
+       this.ghostModel.position.y -= this.speed * dt;
     }
 
     if (this.controller.mouseDown) {
@@ -69,10 +69,10 @@ export class Ghost {
       this.currentRotation.y
     );
 
-    this.adventurerModel.position.add(direction);
-    this.adventurerModel.rotation.copy(this.currentRotation);
+    this.ghostModel.position.add(direction);
+    this.ghostModel.rotation.copy(this.currentRotation);
     this.camera.setup(
-      this.adventurerModel.position,
+      this.ghostModel.position,
       this.currentRotation,
       this.cameraRotationY
     );

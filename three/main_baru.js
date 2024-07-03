@@ -12,9 +12,6 @@ const clock = new THREE.Clock();
 let farmerMixer, kingMixer, banditMixer, dogMixer, lionFishMixer, frogMixer, witchMixer, foxMixer;
 // Player
 let player, ghostPlayer, mainPlayer;
-// Bounding box
-let farmerBoundingBox = null;
-let walkBoundingBox = null;
 let witchBoundingBox = null;
 let enviromentBoundingBox = [];
 // Initialize bounding boxes for debugging visualization
@@ -300,16 +297,7 @@ witchLoader.load("/Farmer.glb", (witch) => {
     ),
     run: witchMixer.clipAction(
       THREE.AnimationClip.findByName(clips, "CharacterArmature|Run")
-    ),
-    wave: witchMixer.clipAction(
-      THREE.AnimationClip.findByName(clips, "CharacterArmature|Wave")
-    ),
-    interact: witchMixer.clipAction(
-      THREE.AnimationClip.findByName(clips, "CharacterArmature|Interact")
-    ),
-    death: witchMixer.clipAction(
-      THREE.AnimationClip.findByName(clips, "CharacterArmature|Death")
-    ),
+    )
   };
 
   createPlayer();
@@ -724,30 +712,6 @@ lightPositions.forEach(position => {
 });
 
 var time_prev = 0;
-
-//______________________________BOTOL TRANSPARAN__________________________
-// Geometri dan Material untuk botol kaca
-// const bottleGeometry = new THREE.ConeGeometry(2, 50, 32);
-
-// const glassMaterial = new THREE.MeshPhysicalMaterial({
-//     color: 0xffffff,
-//     metalness: 0,
-//     roughness: 0,
-//     transmission: 0,  // This makes the material transparent
-//     opacity: 0.8,
-//     reflectivity: 0.6,
-//     transparent: true,
-//     side: THREE.DoubleSide,
-// });
-
-// Membuat botol
-// const bottle = new THREE.Mesh(bottleGeometry, glassMaterial);
-// bottle.scale.set(0.4,0.4,0.4);
-// bottle.position.set(0.2*38, 0.2*30, 0.2*-50);
-// bottle.position.y = 5*0.04;
-// const bottleHelper = new THREE.BoxHelper(bottle, 0x8fffff);
-// // scene.add(bottleHelper);
-// scene.add(bottle);
 
 function updateSpotlightTarget(inclination) {
   const radius = 5; // Jarak antara spotlight dan target

@@ -126,19 +126,19 @@ const maxHeadRotationAngle = 60 * (Math.PI / 180); // Batas rotasi kepala dalam 
 const rotationReturnSpeed = 0.1; // Kecepatan kamera kembali ke posisi semula
 //_____________________________________ROTASI_________________________________________-
 if (this.controller.keys["rotateLeft"]) {
-  if (this.isFpp) {
+  if (this.isFpp) { //fpp kalo < 60 masih boleh
     this.cameraRotationY = Math.min(this.cameraRotationY + this.rotationSpeed * dt, maxHeadRotationAngle);
-  } else {
+  } else { //tpp
     this.cameraRotationY += this.rotationSpeed * dt;
   }
 } else if (this.controller.keys["rotateRight"]) {
-  if (this.isFpp) {
+  if (this.isFpp) { //fpp kalo > -60 boleh
     this.cameraRotationY = Math.max(this.cameraRotationY - this.rotationSpeed * dt, -maxHeadRotationAngle);
-  } else {
+  } else { //tpp
     this.cameraRotationY -= this.rotationSpeed * dt;
   }
 } else {
-   // Jika tidak ada tombol rotasi yang ditekan, kembalikan kamera ke posisi semula
+   //reset
    this.cameraRotationY = THREE.MathUtils.lerp(this.cameraRotationY, 0, rotationReturnSpeed);
 }
 
@@ -166,15 +166,20 @@ let cameraRotation = new THREE.Euler(this.cameraRotationX, this.currentRotation.
     //_______________________________________________ZOOM IN/OUT_________________________________________
   if (this.controller.keys["zoomIn"] || this.controller.keys["zoomOut"]) {
     this.isZooming = true; // Set zooming state
-    this.zoomLevel += this.controller.keys["zoomIn"]
-      ? -this.zoomIncrement
-      : this.zoomIncrement;
+    var incr = 0;
+    if (this.controller.keys["zoomIn"]){
+      incr = -this.zoomIncrement;
+    } else { //zoom out
+      incr = this.zoomIncrement;
+    }
+    this.zoomLevel += incr;
     
     if (this.controller.keys["zoomOut"] && this.isFpp){
       this.zoomLevel -= this.zoomIncrement;
-    }
+    } // kalo fpp cuma bisa zoom in, dikurangi biar ga gerak
+
     const zoomFactor = this.zoomLevel * 0.1;
-    if (!this.isFpp) {
+    if (!this.isFpp) { //tpp
       const zoomedOffset = new THREE.Vector3(
         0,
         2*0.2 + zoomFactor * this.xLevel,
@@ -182,7 +187,7 @@ let cameraRotation = new THREE.Euler(this.cameraRotationX, this.currentRotation.
       ); 
       this.camera.positionOffset.copy(zoomedOffset);
     }
-    else{
+    else{ //fpp
       const zoomedOffset = new THREE.Vector3(
         0,
         2*0.2 + zoomFactor * this.xLevel,
@@ -191,20 +196,12 @@ let cameraRotation = new THREE.Euler(this.cameraRotationX, this.currentRotation.
       this.camera.positionOffset.copy(zoomedOffset);
 
       }
-  } else {
+  } else { //reset
     this.zoomLevel = 0;
     this.isZooming = false; // Reset zooming state
     if (this.isFpp) this.camera.positionOffset.copy(this.cameraHeadOffset);
     else this.camera.positionOffset.copy(this.cameraBaseOffset);
   }
-
-
-    // if (this.controller.keys["resetZoom"]) {
-    //   this.zoomLevel = 0;
-    //   this.isZooming = false; // Reset zooming state
-    //   if (this.isFpp) this.camera.positionOffset.copy(this.cameraHeadOffset);
-    //   else this.camera.positionOffset.copy(this.cameraBaseOffset);
-    // }
 
     //_______________________________________________HEAD TILT_______________________________________________
     const headTiltSpeed = 0.1;
