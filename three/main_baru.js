@@ -165,7 +165,7 @@ const helper = new THREE.BoxHelper(lightMercusuar, 0x8fffff);
 
 //_____________________________________LOAD SKY_________________________________________
 const sky = new Sky();
-sky.scale.setScalar(450000);
+sky.scale.setScalar(4500);
 scene.add(sky);
 
 const sun = new THREE.Vector3();
@@ -175,11 +175,11 @@ skyUniforms['turbidity'].value = 10;
 skyUniforms['rayleigh'].value = 2;
 skyUniforms['mieCoefficient'].value = 0.005;
 skyUniforms['mieDirectionalG'].value = 0.8;
-skyUniforms['sunColor'] = { value: new THREE.Color(0x4f0025) };
+skyUniforms['sunColor'] = { value: new THREE.Color(0x87CEFA) };
 
 const parameters = {
-  inclination: 0, // Position of the sun (0 = midnight, 0.5 = noon)
-  azimuth: 0.25, // Position of the sun around the sky
+  inclination: 0.5, // Position of the sun (0 = midnight, 0.5 = noon)
+  azimuth: 0.005, // Position of the sun around the sky
 };
 
 const sunColorNight = new THREE.Color(0x000000); // Black color for night
@@ -190,7 +190,7 @@ const sunColorDay = new THREE.Color(0x87ceeb); // Light blue for day
 const ambientLight = new THREE.AmbientLight(0xadd8e6, 1); 
 scene.add(ambientLight);
 
-const sunLight = new THREE.DirectionalLight(0xffffff, 4);
+const sunLight = new THREE.DirectionalLight(0x87CEFA, 0.001);
 sunLight.position.set(1, 1, 1).normalize();
 sunLight.castShadow = true;
 scene.add(sunLight);
@@ -211,52 +211,48 @@ function updateSky() {
   sunLight.position.copy(sun).normalize(); // Ensure sunLight follows sun's position
 
   // Interpolate sun color based on inclination
-  if (parameters.inclination < 0.125) {
+  if (parameters.inclination < 0.25) {
     // Night to early night
     const t = parameters.inclination / 0.125;
     sky.material.uniforms['sunColor'].value.lerpColors(sunColorNight, sunColorEarlyNight, t);
     sunLight.color.lerpColors(sunColorNight, sunColorEarlyNight, t);
-    sunLight.intensity = 0.1 + 0.4 * t; // Smooth intensity transition
+    sunLight.intensity = 50 * (1 - t) // Smooth intensity transition
     spotLight.intensity = 0;
     lightMercusuar.intensity = 0;
-  } else if (parameters.inclination < 0.25) {
-    // Early night to dawn
-    const t = (parameters.inclination - 0.125) / 0.125;
-    sky.material.uniforms['sunColor'].value.lerpColors(sunColorEarlyNight, sunColorDawnDusk, t);
-    sunLight.color.lerpColors(sunColorEarlyNight, sunColorDawnDusk, t);
-    sunLight.intensity = 0.5 + 0.5 * t; // Smooth intensity transition
-    spotLight.intensity = 0;
-    lightMercusuar.intensity = 0;
-  } else if (parameters.inclination < 0.5) {
+  } 
+  // else if (parameters.inclination < 0.25) {
+  //   // Early night to dawn
+  //   const t = (parameters.inclination - 0.125) / 0.125;
+  //   sky.material.uniforms['sunColor'].value.lerpColors(sunColorEarlyNight, sunColorDawnDusk, t);
+  //   sunLight.color.lerpColors(sunColorEarlyNight, sunColorDawnDusk, t);
+  //   sunLight.intensity = 0.5 + 0.5 * t; // Smooth intensity transition
+  //   spotLight.intensity = 0;
+  //   lightMercusuar.intensity = 0;
+  // } 
+  else if (parameters.inclination < 0.5) {
     // Dawn to day
     const t = (parameters.inclination - 0.25) / 0.25;
     sky.material.uniforms['sunColor'].value.lerpColors(sunColorDawnDusk, sunColorDay, t);
     sunLight.color.lerpColors(sunColorDawnDusk, sunColorDay, t);
-    sunLight.intensity = 1.0; // Full intensity during day
+    sunLight.intensity = 50.0; // Full intensity during day
     spotLight.intensity = 0;
     lightMercusuar.intensity = 0;
-  } else if (parameters.inclination < 0.75) {
+  } 
+  else if (parameters.inclination < 0.75) {
     // Day to dusk
     const t = (parameters.inclination - 0.5) / 0.25;
     sky.material.uniforms['sunColor'].value.lerpColors(sunColorDay, sunColorDawnDusk, t);
     sunLight.color.lerpColors(sunColorDay, sunColorDawnDusk, t);
-    sunLight.intensity = 1.0; // Full intensity during day
+    sunLight.intensity = 50 * (1 - t); // Full intensity during day
     spotLight.intensity = 100;
     lightMercusuar.intensity = 10;
-  } else if (parameters.inclination < 0.875) {
-    // Dusk to early night
-    const t = (parameters.inclination - 0.75) / 0.125;
-    sky.material.uniforms['sunColor'].value.lerpColors(sunColorDawnDusk, sunColorEarlyNight, t);
-    sunLight.color.lerpColors(sunColorDawnDusk, sunColorEarlyNight, t);
-    sunLight.intensity = 0.5 + 0.5 * (1 - t); // Smooth intensity transition
-    spotLight.intensity = 100;
-    lightMercusuar.intensity = 10;
-  } else {
+  }
+  else {
     // Early night to night
     const t = (parameters.inclination - 0.875) / 0.125;
     sky.material.uniforms['sunColor'].value.lerpColors(sunColorEarlyNight, sunColorNight, t);
     sunLight.color.lerpColors(sunColorEarlyNight, sunColorNight, t);
-    sunLight.intensity = 0.1; // Very low intensity during night
+    sunLight.intensity = 10; // Very low intensity during night
     spotLight.intensity = 10;
     lightMercusuar.intensity = 10;
   }
