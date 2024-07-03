@@ -125,33 +125,7 @@ water.receiveShadow = true;
 
 scene.add( water );
 
-//_____________________________________LOAD SKY_________________________________________
-const sky = new Sky();
-sky.scale.setScalar(450000);
-scene.add(sky);
-
-const sun = new THREE.Vector3();
-
-const skyUniforms = sky.material.uniforms;
-skyUniforms['turbidity'].value = 10;
-skyUniforms['rayleigh'].value = 2;
-skyUniforms['mieCoefficient'].value = 0.005;
-skyUniforms['mieDirectionalG'].value = 0.8;
-skyUniforms['sunColor'] = { value: new THREE.Color(0x4f0025) };
-
-const parameters = {
-  inclination: 0, // Position of the sun (0 = midnight, 0.5 = noon)
-  azimuth: 0.25, // Position of the sun around the sky
-};
-
-const sunColorNight = new THREE.Color(0x000000); // Black color for night
-const sunColorEarlyNight = new THREE.Color(0x4f0025); // Dark grey for early night
-const sunColorDawnDusk = new THREE.Color(0xffd1a4); // Orange color for dawn and dusk
-const sunColorDay = new THREE.Color(0x222222); // White color for day
-
-const ambientLight = new THREE.AmbientLight(0xadd8e6, 1); 
-scene.add(ambientLight);
-
+//_____________________________LAMPU MERCUSUAR______________________________
 const spotLight = new THREE.SpotLight(0xffffff);
 spotLight.position.set(0.2*38, 0.2*30, 0.2*-50); // Posisi spotlight
 spotLight.angle = Math.PI / 180; // Sudut pancaran cahaya
@@ -181,6 +155,41 @@ const lightMercusuar = new THREE.PointLight(0xffffff, 100, 1000);
     lightMercusuar.shadow.camera.left = -200;
     scene.add(lightMercusuar);
 
+//_____________________________________LOAD SKY_________________________________________
+const sky = new Sky();
+sky.scale.setScalar(450000);
+scene.add(sky);
+
+const sun = new THREE.Vector3();
+
+const skyUniforms = sky.material.uniforms;
+skyUniforms['turbidity'].value = 10;
+skyUniforms['rayleigh'].value = 2;
+skyUniforms['mieCoefficient'].value = 0.005;
+skyUniforms['mieDirectionalG'].value = 0.8;
+skyUniforms['sunColor'] = { value: new THREE.Color(0x4f0025) };
+
+const parameters = {
+  inclination: 0, // Position of the sun (0 = midnight, 0.5 = noon)
+  azimuth: 0.25, // Position of the sun around the sky
+};
+
+const sunColorNight = new THREE.Color(0x000000); // Black color for night
+const sunColorEarlyNight = new THREE.Color(0x2f0015); // Darker grey for early night
+const sunColorDawnDusk = new THREE.Color(0x4f4f4f); // Darker grey for dawn and dusk
+const sunColorDay = new THREE.Color(0x87ceeb); // Light blue for day
+
+const ambientLight = new THREE.AmbientLight(0xadd8e6, 1); 
+scene.add(ambientLight);
+
+const sunLight = new THREE.DirectionalLight(0xffffff, 4);
+sunLight.position.set(1, 1, 1).normalize();
+sunLight.castShadow = true;
+scene.add(sunLight);
+
+const sunLightHelper = new THREE.DirectionalLightHelper(sunLight, 0x0F9B34);
+scene.add(sunLightHelper);
+
 // Function to update the sky based on parameters
 function updateSky() {
   const theta = Math.PI * (parameters.inclination - 0.5);
@@ -191,52 +200,63 @@ function updateSky() {
   sun.z = Math.sin(phi) * Math.cos(theta);
 
   sky.material.uniforms['sunPosition'].value.copy(sun);
+  sunLight.position.copy(sun).normalize(); // Ensure sunLight follows sun's position
 
   // Interpolate sun color based on inclination
   if (parameters.inclination < 0.125) {
     // Night to early night
     const t = parameters.inclination / 0.125;
     sky.material.uniforms['sunColor'].value.lerpColors(sunColorNight, sunColorEarlyNight, t);
-    spotLight.intensity = 0;  // Turn on spotLight
-    lightMercusuar.intensity = 0;  // Turn on lightMercusuar
+    sunLight.color.lerpColors(sunColorNight, sunColorEarlyNight, t);
+    sunLight.intensity = 0.1 + 0.4 * t; // Smooth intensity transition
+    spotLight.intensity = 0;
+    lightMercusuar.intensity = 0;
   } else if (parameters.inclination < 0.25) {
     // Early night to dawn
     const t = (parameters.inclination - 0.125) / 0.125;
     sky.material.uniforms['sunColor'].value.lerpColors(sunColorEarlyNight, sunColorDawnDusk, t);
-    spotLight.intensity = 0;  // Turn on spotLight
-    lightMercusuar.intensity = 0;  // Turn on lightMercusuar
+    sunLight.color.lerpColors(sunColorEarlyNight, sunColorDawnDusk, t);
+    sunLight.intensity = 0.5 + 0.5 * t; // Smooth intensity transition
+    spotLight.intensity = 0;
+    lightMercusuar.intensity = 0;
   } else if (parameters.inclination < 0.5) {
     // Dawn to day
     const t = (parameters.inclination - 0.25) / 0.25;
     sky.material.uniforms['sunColor'].value.lerpColors(sunColorDawnDusk, sunColorDay, t);
-    spotLight.intensity = 0;  // Turn on spotLight
-    lightMercusuar.intensity = 0;  // Turn on lightMercusuar
+    sunLight.color.lerpColors(sunColorDawnDusk, sunColorDay, t);
+    sunLight.intensity = 1.0; // Full intensity during day
+    spotLight.intensity = 0;
+    lightMercusuar.intensity = 0;
   } else if (parameters.inclination < 0.75) {
     // Day to dusk
     const t = (parameters.inclination - 0.5) / 0.25;
     sky.material.uniforms['sunColor'].value.lerpColors(sunColorDay, sunColorDawnDusk, t);
-    spotLight.intensity = 100;  // Turn on spotLight
-    lightMercusuar.intensity = 10;  // Turn on lightMercusuar
+    sunLight.color.lerpColors(sunColorDay, sunColorDawnDusk, t);
+    sunLight.intensity = 1.0; // Full intensity during day
+    spotLight.intensity = 100;
+    lightMercusuar.intensity = 10;
   } else if (parameters.inclination < 0.875) {
     // Dusk to early night
     const t = (parameters.inclination - 0.75) / 0.125;
     sky.material.uniforms['sunColor'].value.lerpColors(sunColorDawnDusk, sunColorEarlyNight, t);
-    spotLight.intensity = 100;  // Turn on spotLight
-    lightMercusuar.intensity = 10;  // Turn on lightMercusuar
+    sunLight.color.lerpColors(sunColorDawnDusk, sunColorEarlyNight, t);
+    sunLight.intensity = 0.5 + 0.5 * (1 - t); // Smooth intensity transition
+    spotLight.intensity = 100;
+    lightMercusuar.intensity = 10;
   } else {
     // Early night to night
     const t = (parameters.inclination - 0.875) / 0.125;
     sky.material.uniforms['sunColor'].value.lerpColors(sunColorEarlyNight, sunColorNight, t);
-    spotLight.intensity = 10;  // Turn on spotLight
-    lightMercusuar.intensity = 10;  // Turn on lightMercusuar
+    sunLight.color.lerpColors(sunColorEarlyNight, sunColorNight, t);
+    sunLight.intensity = 0.1; // Very low intensity during night
+    spotLight.intensity = 10;
+    lightMercusuar.intensity = 10;
   }
 }
 
 // // Initial sky update
 updateSky();
 
-const sunLight = new THREE.DirectionalLight(0x4f0025, 1);
-scene.add(sunLight);
 var tonight = true;
 
 //_______________________________________________LOAD WITCH_____________________________________
@@ -738,21 +758,22 @@ function animate(time) {
   //_____________________________UPDATE SKY_______________________________
   // Update the sky
   if(tonight){
-    parameters.inclination += 0.0025; // Adjust the speed of the day/night cycle
+    parameters.inclination += 0.00025; // Adjust the speed of the day/night cycle
     
   }
   else{
-    parameters.inclination -= 0.0025; // Adjust the speed of the day/night cycle
+    parameters.inclination -= 0.00025; // Adjust the speed of the day/night cycle
   }
   
   if (parameters.inclination >= 1) {
     tonight = false;
   } else if (parameters.inclination <= 0){
-    tonight=true;
+    tonight = true;
   }
 
   updateSpotlightTarget(0.025);
   updateSky();
+
   // Update sun light position and color
   sunLight.position.copy(sun);
   sunLight.color.copy(sky.material.uniforms['sunColor'].value);

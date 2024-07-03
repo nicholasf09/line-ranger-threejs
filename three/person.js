@@ -6,8 +6,8 @@ export class Player {
     controller,
     scene,
     speed,
-    adventurerModel,
-    adventurerActions,
+    playerModel,
+    playerActions,
     renderer,
     enviromentBoundingBox
   ) {
@@ -15,8 +15,8 @@ export class Player {
     this.controller = controller;
     this.scene = scene;
     this.speed = speed;
-    this.adventurerModel = adventurerModel;
-    this.adventurerActions = adventurerActions;
+    this.playerModel = playerModel;
+    this.playerActions = playerActions;
     this.renderer = renderer;
     this.enviromentBoundingBox = enviromentBoundingBox;
     this.rotationSpeed = Math.PI / 2;
@@ -36,14 +36,14 @@ export class Player {
     this.isFpp = false;
     this.isZoomed = false;
     this.isZooming = false;
-    this.camera.setup(this.adventurerModel.position, this.currentRotation);
+    this.camera.setup(this.playerModel.position, this.currentRotation);
 
-    this.activeAction = this.adventurerActions["idle"];
+    this.activeAction = this.playerActions["idle"];
     this.activeAction.play();
   }
   
   checkCollision() {
-    const playerBoundingBox = new THREE.Box3().setFromObject(this.adventurerModel);
+    const playerBoundingBox = new THREE.Box3().setFromObject(this.playerModel);
     for (const boundingBox of this.enviromentBoundingBox) {
       if (playerBoundingBox.intersectsBox(boundingBox)) {
         return true;
@@ -72,7 +72,7 @@ export class Player {
       this.controller.keys["right"] = false;
     } 
     if (this.controller.keys["Shift"]) {
-      this.switchAnimation(this.adventurerActions["run"]);
+      this.switchAnimation(this.playerActions["run"]);
     } else if (
       this.controller.keys["Shift"] &&
       (this.controller.keys["forward"] ||
@@ -80,16 +80,16 @@ export class Player {
         this.controller.keys["backward"] ||
         this.controller.keys["right"])
     ) {
-      this.switchAnimation(this.adventurerActions["run"]);
+      this.switchAnimation(this.playerActions["run"]);
     } else if (
       this.controller.keys["forward"] ||
       this.controller.keys["left"] ||
       this.controller.keys["backward"] ||
       this.controller.keys["right"]
     ) {
-      this.switchAnimation(this.adventurerActions["walk"]);
+      this.switchAnimation(this.playerActions["walk"]);
     } else {
-      this.switchAnimation(this.adventurerActions["idle"]);
+      this.switchAnimation(this.playerActions["idle"]);
     }
 
     //
@@ -271,9 +271,9 @@ let cameraRotation = new THREE.Euler(this.cameraRotationX, this.currentRotation.
       );
     }
 
-    this.adventurerModel.position.add(direction);
-    this.adventurerModel.rotation.copy(this.currentRotation);
-    this.camera.setup(this.adventurerModel.position, cameraRotation, this.cameraRotationY, this.isFpp, this.cameraRotationZ, this.zoomLevel);
+    this.playerModel.position.add(direction);
+    this.playerModel.rotation.copy(this.currentRotation);
+    this.camera.setup(this.playerModel.position, cameraRotation, this.cameraRotationY, this.isFpp, this.cameraRotationZ, this.zoomLevel);
   }
 
 }
