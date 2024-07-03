@@ -92,7 +92,7 @@ buildingLoader.load("resources/envreborn rumah.gltf", function (building) {
       }
 
       enviromentBoundingBox.push(childBoundingBox)
-      scene.add(childBBoxHelper);
+      // scene.add(childBBoxHelper);
     }
   });
 
@@ -127,7 +127,7 @@ scene.add( water );
 
 //_____________________________LAMPU MERCUSUAR______________________________
 const spotLight = new THREE.SpotLight(0xffffff);
-spotLight.position.set(0.2*38, 0.2*30, 0.2*-50); // Posisi spotlight
+spotLight.position.set(0.2 * 50, 0.2 * 35, 0.2 * -60); // Posisi spotlight
 spotLight.angle = Math.PI / 180; // Sudut pancaran cahaya
 spotLight.penumbra = 0.02; // Penurunan intensitas cahaya di tepi
 spotLight.decay = 1; // Penurunan intensitas cahaya seiring jarak
@@ -140,20 +140,28 @@ spotLight.target.position.set(0.2, 0.2*5, 0.2);
 scene.add(spotLight.target);
 
 const spotLightHelper = new THREE.SpotLightHelper(spotLight, 0x0F9B34);
-scene.add(spotLightHelper);
+// scene.add(spotLightHelper);
 
-const lightMercusuar = new THREE.PointLight(0xffffff, 100, 1000);
-    lightMercusuar.position.set(0.2*38, 0.2*30, 0.2*-50);
-    lightMercusuar.castShadow = true;
-    lightMercusuar.shadow.mapSize.width = 1024; // Increase shadow map resolution
-    lightMercusuar.shadow.mapSize.height = 1024; // Increase shadow map resolution
-    lightMercusuar.shadow.camera.near = 0.5; // Adjust near clipping plane of shadow camera
-    lightMercusuar.shadow.camera.far = 500; // Adjust far clipping plane of shadow camera
-    lightMercusuar.shadow.camera.top = 200;
-    lightMercusuar.shadow.camera.bottom = -200;
-    lightMercusuar.shadow.camera.right = 200;
-    lightMercusuar.shadow.camera.left = -200;
-    scene.add(lightMercusuar);
+// Assuming lightMercusuar is a point light
+const lightMercusuar = new THREE.PointLight(0xffffff, 500, 100000); // Adjust intensity and distance as needed
+lightMercusuar.position.set(0.2 * 50, 0.2 * 35, 0.2 * -60); // Ensure the position is correct
+lightMercusuar.castShadow = true; // Enable shadows
+
+// Optional: Adjust shadow properties if needed
+lightMercusuar.shadow.mapSize.width = 2048;
+lightMercusuar.shadow.mapSize.height = 2048;
+lightMercusuar.shadow.camera.near = 0.5;
+lightMercusuar.shadow.camera.far = 500;
+
+// Add light to the scene
+scene.add(lightMercusuar);
+
+// Optional: Add a helper to visualize the light
+const lightMercusuarHelper = new THREE.PointLightHelper(lightMercusuar, 1);
+// scene.add(lightMercusuarHelper);
+  
+const helper = new THREE.BoxHelper(lightMercusuar, 0x8fffff);
+// scene.add(helper);
 
 //_____________________________________LOAD SKY_________________________________________
 const sky = new Sky();
@@ -188,7 +196,7 @@ sunLight.castShadow = true;
 scene.add(sunLight);
 
 const sunLightHelper = new THREE.DirectionalLightHelper(sunLight, 0x0F9B34);
-scene.add(sunLightHelper);
+// scene.add(sunLightHelper);
 
 // Function to update the sky based on parameters
 function updateSky() {
@@ -278,7 +286,7 @@ witchLoader.load("/Farmer.glb", (witch) => {
   // Membuat bounding box
   witchBoundingBox = new THREE.Box3()
   witchBoxHelper = new THREE.Box3Helper(witchBoundingBox, 0x0000ff); // Blue for witch
-  scene.add(witchBoxHelper);
+  // scene.add(witchBoxHelper);
 
   const clips = witch.animations;
   witchMixer = new THREE.AnimationMixer(witchModel);
@@ -347,7 +355,7 @@ farmerLoader.load("/Witch.glb", (farmer) => {
       childBoundingBox.max.add(farmerModel.position);
       childBBoxHelper = new THREE.Box3Helper(childBoundingBox, 0xff0000);
       enviromentBoundingBox.push(childBoundingBox)
-      scene.add(childBBoxHelper);
+      // scene.add(childBBoxHelper);
     }
   });
 
@@ -385,7 +393,7 @@ kingLoader.load("/King.glb", (king) => {
       childBoundingBox.max.add(kingModel.position);
       childBBoxHelper = new THREE.Box3Helper(childBoundingBox, 0xff0000);
       enviromentBoundingBox.push(childBoundingBox)
-      scene.add(childBBoxHelper);
+      // scene.add(childBBoxHelper);
     }
   });
 
@@ -423,7 +431,7 @@ banditLoader.load("/Bandit.glb", (bandit) => {
       childBoundingBox.max.add(banditModel.position);
       childBBoxHelper = new THREE.Box3Helper(childBoundingBox, 0xff0000);
       enviromentBoundingBox.push(childBoundingBox)
-      scene.add(childBBoxHelper);
+      // scene.add(childBBoxHelper);
     }
   });
 
@@ -461,7 +469,7 @@ dogLoader.load("/Shiba Inu.glb", (dog) => {
       childBoundingBox.max.add(dogModel.position);
       childBBoxHelper = new THREE.Box3Helper(childBoundingBox, 0xff0000);
       enviromentBoundingBox.push(childBoundingBox)
-      scene.add(childBBoxHelper);
+      // scene.add(childBBoxHelper);
     }
   });
 
@@ -499,7 +507,7 @@ lionFishLoader.load("/Lionfish.glb", (lionFish) => {
       childBoundingBox.max.add(lionFishModel.position);
       childBBoxHelper = new THREE.Box3Helper(childBoundingBox, 0xff0000);
       enviromentBoundingBox.push(childBoundingBox)
-      scene.add(childBBoxHelper);
+      // scene.add(childBBoxHelper);
     }
   });
 
@@ -768,7 +776,7 @@ function animate(time) {
       witchBoundingBox,
       0x0000ff
     );
-    scene.add(witchBoxHelper);
+    // scene.add(witchBoxHelper);
   }
 
   time_prev = time;
