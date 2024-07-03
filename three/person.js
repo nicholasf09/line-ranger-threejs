@@ -38,13 +38,16 @@ export class Player {
     this.isZooming = false;
     this.camera.setup(this.playerModel.position, this.currentRotation);
 
+    //Animasi awal idle
     this.activeAction = this.playerActions["idle"];
     this.activeAction.play();
   }
   
   checkCollision() {
+    //Buat bounding box dr model char
     const playerBoundingBox = new THREE.Box3().setFromObject(this.playerModel);
     for (const boundingBox of this.enviromentBoundingBox) {
+      //Jika menabrak bounding box env
       if (playerBoundingBox.intersectsBox(boundingBox)) {
         return true;
       }
@@ -64,13 +67,15 @@ export class Player {
   update(dt) {
     var direction = new THREE.Vector3(0, 0, 0);
     let verticalMouseLookSpeed = this.mouseLookSpeed;
-    //animation
+    //Cek collision
     if(this.checkCollision()){
       this.controller.keys["forward"] = false;
       this.controller.keys["left"] = false;
       // this.controller.keys["backward"] = false;
       this.controller.keys["right"] = false;
     } 
+
+    //Update animasi, idle, walk, atau run
     if (this.controller.keys["Shift"]) {
       this.switchAnimation(this.playerActions["run"]);
     } else if (
@@ -92,7 +97,7 @@ export class Player {
       this.switchAnimation(this.playerActions["idle"]);
     }
 
-    //
+    //Update arah char dan rotasi
     if (this.controller.keys["forward"]) {
       direction.z += this.speed * dt;
     }
@@ -109,16 +114,18 @@ export class Player {
       direction.multiplyScalar(2);
     }
 
-// Mode FPP
+//Switch ke kamera FPP
 if (this.controller.keys["fpp"]) {
   this.isFpp = true;
-  this.camera.positionOffset.copy(this.cameraHeadOffset); // Set to head position for FPP
+  //Set posisi ke head char
+  this.camera.positionOffset.copy(this.cameraHeadOffset); 
 }
 
-// Mode TPP
+//Switch ke kamera TPP
 if (this.controller.keys["tpp"]) {
   this.isFpp = false;
-  this.camera.positionOffset.copy(this.cameraBaseOffset); // Set to default for TPP
+  //Set posisi ke belakang char
+  this.camera.positionOffset.copy(this.cameraBaseOffset); 
   this.cameraRotationZ = 0;
 }
 
@@ -146,18 +153,20 @@ if (this.controller.keys["rotateLeft"]) {
 const maxHeadRotationAngleX = 45 * (Math.PI / 180); // Batas rotasi kepala dalam FPP (45 derajat) untuk Pitch
 if (this.controller.keys["headUp"]) {
   if (this.isFpp) {
+    //Rotasi hanya boleh max 45 derajat ke atas
     this.cameraRotationX = Math.max(this.cameraRotationX - this.rotationSpeed * dt, -maxHeadRotationAngleX);
   } else {
     this.cameraRotationX -= this.rotationSpeed * dt;
   }
 } else if (this.controller.keys["headDown"]) {
   if (this.isFpp) {
+    //Rotasi hanya boleh max 45 derajat ke bawah
     this.cameraRotationX = Math.min(this.cameraRotationX + this.rotationSpeed * dt, maxHeadRotationAngleX);
   } else {
     this.cameraRotationX += this.rotationSpeed * dt;
   }
 } else {
-  // Jika tidak ada tombol naik atau turun yang ditekan, kembalikan kamera ke posisi semula
+  // Jika tidak ditekan, reset kamera ke posisi awal
   this.cameraRotationX = THREE.MathUtils.lerp(this.cameraRotationX, 0, rotationReturnSpeed);
 }
 
@@ -194,13 +203,16 @@ let cameraRotation = new THREE.Euler(this.cameraRotationX, this.currentRotation.
         0 - zoomFactor
       ); 
       this.camera.positionOffset.copy(zoomedOffset);
-
       }
   } else { //reset
     this.zoomLevel = 0;
     this.isZooming = false; // Reset zooming state
-    if (this.isFpp) this.camera.positionOffset.copy(this.cameraHeadOffset);
-    else this.camera.positionOffset.copy(this.cameraBaseOffset);
+    if (this.isFpp) {
+      this.camera.positionOffset.copy(this.cameraHeadOffset);
+    }
+    else {
+      this.camera.positionOffset.copy(this.cameraBaseOffset);
+    }
   }
 
     //_______________________________________________HEAD TILT_______________________________________________
@@ -208,18 +220,13 @@ let cameraRotation = new THREE.Euler(this.cameraRotationX, this.currentRotation.
     const maxTiltAngle = 5 * (Math.PI / 180);
 
     if (this.isFpp) {
+      //Rotasi max 5 derajat
       if (this.controller.keys["tiltLeft"]) {
-        this.cameraRotationZ = Math.min(
-          this.cameraRotationZ + this.rotationSpeed * dt,
-          maxTiltAngle
-        );
+        this.cameraRotationZ = Math.min(this.cameraRotationZ + this.rotationSpeed * dt, maxTiltAngle);
       } else if (this.controller.keys["tiltRight"]) {
-        this.cameraRotationZ = Math.max(
-          this.cameraRotationZ - this.rotationSpeed * dt,
-          -maxTiltAngle
-        );
+        this.cameraRotationZ = Math.max(this.cameraRotationZ - this.rotationSpeed * dt, -maxTiltAngle);
       } else {
-        // If no tilt keys are pressed, reset cameraRotationZ to zero
+        //Jika tidak ditekan, reset kamera ke posisi awal
         if (this.cameraRotationZ > 0) {
           this.cameraRotationZ = Math.max(this.cameraRotationZ - this.rotationSpeed * dt, 0);
         } else if (this.cameraRotationZ < 0) {
@@ -228,26 +235,21 @@ let cameraRotation = new THREE.Euler(this.cameraRotationX, this.currentRotation.
       }
     }
 
-    this.currentRotation.z = THREE.MathUtils.lerp(
-      this.currentRotation.z,
-      this.cameraRotationZ,
-      headTiltSpeed
-    );
-
+    this.currentRotation.z = THREE.MathUtils.lerp(this.currentRotation.z,this.cameraRotationZ,headTiltSpeed);
     this.currentRotation.y += this.rotationVector.y * dt;
     this.currentRotation.z += this.rotationVector.z * dt;
 
     // Reset
     this.rotationVector.set(0, 0, 0);
 
-    // Apply player rotation to direction vector
+    //Rotasi karakter ke arah lihat
     direction.applyAxisAngle(
       new THREE.Vector3(0, 1, 0),
       this.currentRotation.y
     );
 
     if (this.isFpp) {
-      // Apply camera rotation in FPP
+      //Rotasi kamera untuk arah lihat
       direction.applyAxisAngle(
         new THREE.Vector3(0, 1, 0),
         this.cameraRotationY
@@ -429,10 +431,10 @@ export class ThirdPersonCamera {
       rotation.y + cameraRotationY
     );
 
-      temp.applyAxisAngle(
-        new THREE.Vector3(0, 0, 1),
-        rotation.z + cameraRotationZ
-      );
+    temp.applyAxisAngle(
+      new THREE.Vector3(0, 0, 1),
+      rotation.z + cameraRotationZ
+    );
 
     temp.add(target);
 

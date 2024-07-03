@@ -8,13 +8,18 @@ import { Sky } from 'three/addons/objects/Sky.js';
 
 // Clock
 const clock = new THREE.Clock();
-// Mixers
+
+// Mixer karakter untuk animasi
 let farmerMixer, kingMixer, banditMixer, dogMixer, lionFishMixer, frogMixer, witchMixer, foxMixer;
+
 // Player
 let player, ghostPlayer, mainPlayer;
+
+//Bounding box untuk collision
 let witchBoundingBox = null;
 let enviromentBoundingBox = [];
-// Initialize bounding boxes for debugging visualization
+
+// Box Helper
 let witchBoxHelper;
 
 // Sizes
@@ -46,6 +51,7 @@ loader.load('resources/dermaga.gltf', function (gltf) {
     object.scale.set(0.2,0.2,0.2);
 
     function setShadowProperties(obj) {
+      //Loop untuk cek jika Mesh, aktifkan shadow
         obj.traverse(child => {
             if (child.isMesh) {
                 child.castShadow = true;
@@ -69,11 +75,12 @@ buildingLoader.load("resources/envreborn rumah.gltf", function (building) {
   buildingModel.position.set(0, 0, 0);
 
   buildingModel.traverse((child) => {
+    //Loop untuk cek jika Mesh, aktifkan shadow
     if (child.isMesh) {
       child.castShadow = true;
       child.receiveShadow = true;
 
-      // Create bounding box helper
+      //Jika Mesh, berikan bounding box
       childBoundingBox = new THREE.Box3().setFromObject(child);
       childBoundingBox.min.multiply(buildingModel.scale);
       childBoundingBox.max.multiply(buildingModel.scale);
@@ -265,7 +272,7 @@ updateSky();
 
 var tonight = true;
 
-//_______________________________________________LOAD WITCH_____________________________________
+//_______________________________________________LOAD Farmer_____________________________________
 const witchLoader = new GLTFLoader();
 let witchModel, witchActions;
 
@@ -321,7 +328,7 @@ function createPlayer() {
   mainPlayer = player;
 }
 
-//______________________________LOAD FARMER_____________________________
+//______________________________LOAD Witch_____________________________
 const farmerLoader = new GLTFLoader();
 let farmerModel;
 
@@ -740,16 +747,19 @@ function animate(time) {
   requestAnimationFrame(animate);
 
   const delta = clock.getDelta();
-  if (witchMixer) witchMixer.update(delta);
+
+  if (witchMixer) {
+    witchMixer.update(delta);
+  }
+
   if (player) {
-    // Check if player is defined before updating
     player.update(delta);
   }
 
   var dt = time - time_prev;
   dt *= 0.1;
 
-  // Update mixer jika ada animasi
+  // Update mixer karakter animasi
   if (farmerMixer) {
     farmerMixer.update(delta);
   }
@@ -815,8 +825,8 @@ function animate(time) {
   sunLight.position.copy(sun);
   sunLight.color.copy(sky.material.uniforms['sunColor'].value);
 
-  //__________________________________UPDATE BOUNDING BOX & HELPER WITCH_______________________
-  // Update bounding boxes and helpers for the witch
+  //__________________________________UPDATE BOUNDING BOX & HELPER Farmer_______________________
+  // Update bounding box dan helper utk farmer
   if (witchModel && witchBoundingBox) {
     witchBoundingBox.setFromObject(witchModel);
     scene.remove(witchBoxHelper);
