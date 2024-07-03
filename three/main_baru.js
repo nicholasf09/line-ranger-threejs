@@ -9,7 +9,7 @@ import { Sky } from 'three/addons/objects/Sky.js';
 // Clock
 const clock = new THREE.Clock();
 // Mixers
-let farmerMixer, kingMixer, banditMixer, dogMixer, lionFishMixer, frogMixer, witchMixer;
+let farmerMixer, kingMixer, banditMixer, dogMixer, lionFishMixer, frogMixer, witchMixer, foxMixer;
 // Player
 let player, ghostPlayer, mainPlayer;
 // Bounding box
@@ -408,6 +408,44 @@ kingLoader.load("/King.glb", (king) => {
   } 
 });
 
+ //______________________________LOAD fox_____________________________
+ const foxLoader = new GLTFLoader();
+ let foxModel;
+ 
+ foxLoader.load("/Fox.glb", (fox) => {
+   foxModel = fox.scene;
+   scene.add(foxModel);
+   foxModel.scale.set(0.1, 0.1, 0.1);
+   foxModel.position.set(-3*0.2, 2.6*0.2, 37.4*0.2);
+   foxModel.rotation.y = THREE.MathUtils.degToRad(110);
+   foxModel.traverse((child) => {
+     if (child.isMesh) {
+       child.castShadow = true;
+       child.receiveShadow = true;
+ 
+       // Create bounding box helper
+       childBoundingBox = new THREE.Box3().setFromObject(child);
+       childBoundingBox.min.multiply(foxModel.scale);
+       childBoundingBox.max.multiply(foxModel.scale);
+       childBoundingBox.min.add(foxModel.position);
+       childBoundingBox.max.add(foxModel.position);
+       childBBoxHelper = new THREE.Box3Helper(childBoundingBox, 0xff0000);
+       enviromentBoundingBox.push(childBoundingBox)
+       // scene.add(childBBoxHelper);
+     }
+   });
+ 
+   const clips = fox.animations;
+   foxMixer = new THREE.AnimationMixer(foxModel);
+   const wavingClip = THREE.AnimationClip.findByName(clips, "Idle_2_HeadLow");
+ 
+   if (wavingClip) {
+     const wavingAction = foxMixer.clipAction(wavingClip);
+     wavingAction.setLoop(THREE.LoopRepeat);
+     wavingAction.play();
+   } 
+ });
+
 //______________________________LOAD Bandit_____________________________
 const banditLoader = new GLTFLoader();
 let banditModel;
@@ -562,6 +600,47 @@ frogLoader.load("/Frog.glb", (frog) => {
 
 let frogSpeed = 1*0.002;
 
+// LOAD KACA VILLA
+const glassMaterial = new THREE.MeshPhysicalMaterial();
+glassMaterial.color = new THREE.Color(1,1,1);
+glassMaterial.transmission = 1.0;
+glassMaterial.roughness = 0.0;
+glassMaterial.ior = 1.5;
+glassMaterial.thickness = 0.5;
+glassMaterial.specularIntensity = 1.0;
+glassMaterial.clearcoat = 1.0;
+
+
+const windowGeometry = new THREE.BoxGeometry(2, 2.3, 0.01); // Ukuran (width, height, depth)
+const windowMesh = new THREE.Mesh(windowGeometry, glassMaterial);
+
+windowMesh.position.set(-3*0.2, 1*0.2, 38.4*0.2);
+
+scene.add(windowMesh); 
+
+const windowGeometry1 = new THREE.BoxGeometry(2, 2.3, 0.01); // Ukuran (width, height, depth)
+const windowMesh1 = new THREE.Mesh(windowGeometry1, glassMaterial);
+
+windowMesh1.position.set(-3*0.2, 1*0.2, 47.1*0.2);
+
+scene.add(windowMesh1); 
+
+const windowGeometry2 = new THREE.BoxGeometry(0.4, 2.3, 0.01); // Ukuran (width, height, depth)
+const windowMesh2 = new THREE.Mesh(windowGeometry2, glassMaterial);
+
+windowMesh2.position.set(-8*0.2, 1*0.2, 39.4*0.2);
+windowMesh2.rotation.y = THREE.MathUtils.degToRad(90);
+
+scene.add(windowMesh2); 
+
+const windowGeometry3 = new THREE.BoxGeometry(0.8, 2.3, 0.01); // Ukuran (width, height, depth)
+const windowMesh3 = new THREE.Mesh(windowGeometry3, glassMaterial);
+
+windowMesh3.position.set(2.8*0.2, 1*0.2, 45.4*0.2);
+windowMesh3.rotation.y = THREE.MathUtils.degToRad(90);
+
+scene.add(windowMesh3); 
+
 //________________________________CREATE GHOST CAM_______________________________
 const ghostGeometry = new THREE.BoxGeometry(10, 20, 10);
 const ghostMaterial = new THREE.MeshBasicMaterial({
@@ -647,26 +726,26 @@ var time_prev = 0;
 
 //______________________________BOTOL TRANSPARAN__________________________
 // Geometri dan Material untuk botol kaca
-const bottleGeometry = new THREE.ConeGeometry(2, 50, 32);
+// const bottleGeometry = new THREE.ConeGeometry(2, 50, 32);
 
-const glassMaterial = new THREE.MeshPhysicalMaterial({
-    color: 0xffffff,
-    metalness: 0,
-    roughness: 0,
-    transmission: 0,  // This makes the material transparent
-    opacity: 0.8,
-    reflectivity: 0.6,
-    transparent: true,
-    side: THREE.DoubleSide,
-});
+// const glassMaterial = new THREE.MeshPhysicalMaterial({
+//     color: 0xffffff,
+//     metalness: 0,
+//     roughness: 0,
+//     transmission: 0,  // This makes the material transparent
+//     opacity: 0.8,
+//     reflectivity: 0.6,
+//     transparent: true,
+//     side: THREE.DoubleSide,
+// });
 
 // Membuat botol
-const bottle = new THREE.Mesh(bottleGeometry, glassMaterial);
-bottle.scale.set(0.4,0.4,0.4);
-bottle.position.set(0.2*38, 0.2*30, 0.2*-50);
-bottle.position.y = 5*0.04;
-const bottleHelper = new THREE.BoxHelper(bottle, 0x8fffff);
-// scene.add(bottleHelper);
+// const bottle = new THREE.Mesh(bottleGeometry, glassMaterial);
+// bottle.scale.set(0.4,0.4,0.4);
+// bottle.position.set(0.2*38, 0.2*30, 0.2*-50);
+// bottle.position.y = 5*0.04;
+// const bottleHelper = new THREE.BoxHelper(bottle, 0x8fffff);
+// // scene.add(bottleHelper);
 // scene.add(bottle);
 
 function updateSpotlightTarget(inclination) {
@@ -728,6 +807,10 @@ function animate(time) {
 
   if(frogMixer){
     frogMixer.update(delta);
+  }
+
+  if(foxMixer) {
+    foxMixer.update(delta);
   }
 
   if(frogModel){
