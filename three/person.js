@@ -237,20 +237,6 @@ let cameraRotation = new THREE.Euler(this.cameraRotationX, this.currentRotation.
       headTiltSpeed
     );
 
-    if (this.controller.mouseDown) {
-      var dtMouse = this.controller.deltaMousePos;
-      dtMouse.x = dtMouse.x / Math.PI;
-      dtMouse.y = dtMouse.y / Math.PI;
-
-      this.rotationVector.y += dtMouse.x * 100000 * dt;
-      this.camera.targetOffset.y -= dtMouse.y * verticalMouseLookSpeed;
-      this.camera.targetOffset.y = THREE.MathUtils.clamp(
-        this.camera.targetOffset.y,
-        0,
-        60
-      );
-    }
-
     this.currentRotation.y += this.rotationVector.y * dt;
     this.currentRotation.z += this.rotationVector.z * dt;
 
@@ -296,35 +282,10 @@ export class PlayerController {
       zoomOut: false,
       resetZoom: false,
     };
-    this.mousePos = new THREE.Vector2();
-    this.mouseDown = false;
-    this.deltaMousePos = new THREE.Vector2();
     this.camera = camera;
 
     document.addEventListener("keydown", (e) => this.onKeyDown(e), false);
     document.addEventListener("keyup", (e) => this.onKeyUp(e), false);
-    document.addEventListener("mousemove", (e) => this.onMouseMove(e), false);
-    document.addEventListener("mouseup", (e) => this.onMouseUp(e), false);
-    document.addEventListener("mousedown", (e) => this.onMouseDown(e), false);
-  }
-
-  onMouseDown(event) {
-    this.mouseDown = true;
-  }
-
-  onMouseUp(event) {
-    this.mouseDown = false;
-  }
-
-  onMouseMove(event) {
-    var currentMousePos = new THREE.Vector2(
-      (event.clientX / window.innerWidth) * 2 - 1,
-      -(event.clientY / window.innerHeight) * 2 + 1
-    );
-    this.deltaMousePos.subVectors(currentMousePos, this.mousePos);
-    this.mousePos.copy(currentMousePos);
-
-    this.deltaMousePos.y *= -100;
   }
 
   onKeyDown(event) {
@@ -476,11 +437,7 @@ export class ThirdPersonCamera {
         rotation.z + cameraRotationZ
       );
 
-
-    const zoomFactor = zoomLevel * 0.1;
-
     temp.add(target);
-
 
     this.camera.position.copy(temp);
 
